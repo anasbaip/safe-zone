@@ -1,67 +1,113 @@
-# Buy01 — Microservices Marketplace with CI/CD
+# SafeZone — Microservices Platform Code Quality & Security with SonarQube
 
-A full-stack marketplace built with **Spring Boot microservices** and **Angular**, with an automated **Jenkins + SonarQube** pipeline for testing, code analysis, and Docker deployment.
+[![Code quality](https://github.com/anasbaip/safe-zone/actions/workflows/quality.yml/badge.svg)](https://github.com/anasbaip/safe-zone/actions/workflows/quality.yml)
 
-Buyers can browse products; sellers can manage their catalog and upload product images. The project also demonstrates service discovery, event-driven communication, security, code coverage, quality gates, and deployment health checks.
+A full-stack e-commerce microservices platform built with **Spring Boot** and **Angular**, integrated with **SonarQube**, **GitHub Actions**, and **Jenkins** to enforce automated static code analysis, quality gates, and secure CI/CD pipelines.
 
-## At a glance
+---
 
-| Layer | Technology | Responsibility |
-| --- | --- | --- |
-| Frontend | Angular | Marketplace UI for clients and sellers |
-| Backend | Spring Boot | User, Product, Media, Gateway, and Discovery services |
-| Data | MongoDB | Application data |
-| Events | Apache Kafka | Asynchronous service events |
-| Media | Cloudinary | Uploaded product images |
-| CI/CD | Jenkins | Tests, packaging, scanning, building, deployment |
-| Code quality | SonarQube | Static analysis and quality gates |
-| Coverage | JaCoCo, LCOV | Java and frontend test coverage |
-| Infrastructure | Docker Compose + Docker-in-Docker | Isolated services and application deployment |
+## Overview & Role Play
 
-## How it works
+As a **DevOps and Quality Assurance Engineer**, the mission in **SafeZone** is to implement continuous code quality checks across all microservices, ensuring that vulnerabilities, code smells, and low-coverage code are detected early and prevented from reaching production.
+
+### Core Objectives
+* **Containerized SonarQube**: Deploy and manage SonarQube and PostgreSQL using Docker.
+* **Multi-Service Analysis**: Independently analyze 6 distinct microservices with service-specific quality tokens and metrics.
+* **Dual CI/CD Integration**:
+  * **GitHub Actions**: Automated whole-code static analysis and quality gate enforcement on every push and pull request across all branches.
+  * **Jenkins Pipeline**: Production-grade CI/CD pipeline gating Docker image builds and deployment on 100% passing quality gates.
+* **Strict Quality Gates**: Enforce zero vulnerabilities, zero bugs, minimum 80% coverage, and reviewed security hotspots.
+* **Continuous Monitoring**: Retain historical trends through persistent dashboards and automated nightly scheduled scans.
+* **Branch Protection & Review**: Enforce a mandatory peer-review and CI quality gate check before merging pull requests.
+
+---
+
+## SafeZone Compliance Matrix
+
+How the project fulfills every instruction and constraint of the SafeZone specification:
+
+| # | Specification Requirement | Implementation in SafeZone | Location |
+|---|---|---|---|
+| **1** | **SonarQube Setup with Docker** | Persistent SonarQube + Postgres stack in `jenkins-lab/` and ephemeral isolated CI runner in `.ci/` | [jenkins-lab/compose.yml](jenkins-lab/compose.yml)<br>[.ci/compose.sonar.yml](.ci/compose.sonar.yml) |
+| **2** | **Multi-Service Configuration** | 6 isolated projects configured with dedicated tokens, keys, and profiles: Gateway, Discovery, Product, User, Media, Frontend | [jenkins-lab/sonar-init/bootstrap.py](jenkins-lab/sonar-init/bootstrap.py)<br>[.ci/sonar_ci.py](.ci/sonar_ci.py) |
+| **3** | **GitHub Integration** | Automated workflow triggers on all branch pushes and PRs; webhook support for Jenkins push triggers | [.github/workflows/quality.yml](.github/workflows/quality.yml)<br>[Jenkinsfile](Jenkinsfile#L7-L11) |
+| **4** | **Automated Code Analysis & Quality Gates** | Pipelines immediately abort/fail builds if vulnerabilities, code smells, or coverage thresholds fail | [Jenkinsfile](Jenkinsfile#L210-L224)<br>[.ci/sonar_ci.py](.ci/sonar_ci.py) |
+| **5** | **Continuous Monitoring** | Nightly automated scans (GitHub Actions at 02:17 UTC, Jenkins cron `H H(1-4) * * *`) + persistent web dashboard | [.github/workflows/quality.yml](.github/workflows/quality.yml#L6-L7)<br>[Jenkinsfile](Jenkinsfile#L10) |
+| **6** | **Review & Approval Process** | Branch protection rules requiring approved reviews and passing quality gate status checks before merging | [.ci/main-protection.json](.ci/main-protection.json)<br>[.ci/README.md](.ci/README.md) |
+
+---
+
+## Architecture & Microservices
+
+| Component | Technology | Responsibility | SonarQube Project Key |
+|---|---|---|---|
+| **API Gateway** | Spring Cloud Gateway (Java 21) | TLS termination, JWT validation, routing | `buy01-gateway` |
+| **Discovery Service** | Netflix Eureka (Java 21) | Service registry and dynamic lookup | `buy01-discovery` |
+| **Product Service** | Spring Boot, MongoDB (Java 21) | Product catalog and inventory | `buy01-product-service` |
+| **User Service** | Spring Boot, MongoDB (Java 21) | User authentication and accounts | `buy01-user-service` |
+| **Media Service** | Spring Boot, Cloudinary (Java 21) | Image upload and CDN processing | `buy01-media-service` |
+| **Frontend** | Angular, Jasmine/Karma (Node 24) | Client & Seller marketplace web UI | `buy01-frontend` |
+| **Message Broker** | Apache Kafka | Asynchronous inter-service events | — |
+| **Quality & CI/CD** | SonarQube, GitHub Actions, Jenkins | Code quality gates, automated testing, deployment | — |
+
+---
+
+## CI/CD Pipeline Workflow
 
 ```mermaid
 flowchart TD
-    Developer[Developer pushes code] --> GitHub
-    GitHub --> Jenkins
-    Jenkins --> Tests[Backend and frontend tests]
-    Tests --> Reports[JaCoCo and LCOV reports]
-    Reports --> Sonar[Six SonarQube analyses]
-    Sonar --> Gates{All quality gates pass?}
-    Gates -->|No| Stop[Stop pipeline]
-    Gates -->|Yes| Build[Build Docker images]
-    Build --> Deploy[Deploy with Docker Compose]
-    Deploy --> Health{Health checks pass?}
-    Health -->|Yes| Success[Release successful]
-    Health -->|No| Rollback[Attempt rollback to previous healthy release]
+    Dev[Developer pushes code] --> Git[GitHub Repository]
+    Git --> GHA[GitHub Actions: quality.yml]
+    Git --> Jenk[Jenkins Pipeline]
+
+    subgraph "Continuous Quality Validation (GitHub Actions / Jenkins)"
+        Test[Unit & Integration Tests] --> Cov[JaCoCo & LCOV Coverage]
+        Cov --> Sonar[6-Service SonarQube Scans]
+        Sonar --> Gate{All Quality Gates Pass?}
+    end
+
+    GHA --> Test
+    Jenk --> Test
+
+    Gate -->|No| Fail[Block PR / Abort Pipeline]
+    Gate -->|Yes| Build[Build Docker Images]
+    Build --> Deploy[Deploy via Docker Compose]
+    Deploy --> Health{Health Checks Pass?}
+    Health -->|Yes| Live[Release Successful]
+    Health -->|No| Rollback[Automatic Rollback]
 ```
 
-The application runs inside the `jenkins-docker` Docker daemon. The host's normal `docker ps` shows infrastructure containers; use `docker exec jenkins-docker docker ps` to inspect deployed application containers.
+### Quality Gate Criteria ("Buy01 Quality Gate")
+* **New Code Security Hotspots**: 100% reviewed.
+* **New Code Duplication**: $\le 3\%$.
+* **New Code Coverage**: $\ge 80\%$.
+* **Overall Coverage**: $\ge 80\%$ on backend and all four frontend metrics (Statements, Branches, Functions, Lines).
+* **Bugs & Vulnerabilities**: Exactly **0 allowed**; pipeline immediately terminates upon failure.
 
-## Requirements
+---
 
-- Linux, Git, OpenSSL, Docker Engine, and Docker Compose v2
-- Permission to run Docker commands
-- A GitHub account/token with read access to the repository
-- Cloudinary credentials if you want to test image uploads
-- Sufficient free memory and disk for Jenkins, SonarQube, and builds (approximately 8 GB available RAM is a useful starting point)
+## Prerequisites & Requirements
 
-SonarQube's Elasticsearch needs a suitable host setting:
+- Linux OS with Git, OpenSSL, Docker Engine 24+, and Docker Compose v2.
+- A GitHub account/token with read access to the repository.
+- Host virtual memory configuration for SonarQube's embedded Elasticsearch:
+  ```bash
+  sysctl vm.max_map_count
+  ```
+  If the value is below `524288`, set it using:
+  ```bash
+  sudo sysctl -w vm.max_map_count=524288
+  ```
 
+---
+
+## Quick Start — Fresh Installation & Lab Setup
+
+> The following commands are for **Bash on Linux**, executed from the repository root.
+
+### 1. Clone the repository and initialize configuration
 ```bash
-sysctl vm.max_map_count
-```
-
-If it is below `524288`, ask your system administrator to configure it. This is a **host** setting, not a Docker cache problem.
-
-## Quick start — fresh installation
-
-> Commands below are for **Bash on Linux**, from the repository root. This is a fresh-install guide: do not overwrite existing secrets or delete volumes when updating an existing installation.
-
-### 1. Clone and prepare configuration
-
-```bash
-git clone https://github.com/anass-asbai/safe-zone.git
+git clone https://github.com/anasbaip/safe-zone.git
 cd safe-zone
 
 umask 077
@@ -71,17 +117,9 @@ cp jenkins-lab/.env.example jenkins-lab/.env
 cp .env.example jenkins-lab/jenkins-secrets/buy01-env
 ```
 
-Edit these two files **before starting the application**:
+Configure your secrets in `jenkins-lab/.env` (`SONAR_DB_PASSWORD`) and `jenkins-lab/jenkins-secrets/buy01-env` (`JWT_SECRET`, MongoDB, Cloudinary credentials). Generate a strong JWT secret with `openssl rand -hex 32`.
 
-| File | What to configure |
-| --- | --- |
-| `jenkins-lab/.env` | `SONAR_DB_PASSWORD` for SonarQube PostgreSQL |
-| `jenkins-lab/jenkins-secrets/buy01-env` | `JWT_SECRET`, JWT expiration, MongoDB credentials, Cloudinary credentials, gateway keystore password |
-
-Generate a JWT secret with `openssl rand -hex 32`. Keep all local secrets out of Git. The `buy01-env` file must contain valid shell `KEY=value` lines; quote values containing shell-special characters.
-
-Create the Jenkins admin password and GitHub checkout credentials using hidden prompts:
-
+Set the Jenkins admin password and GitHub credentials via hidden prompts:
 ```bash
 read -rsp 'Jenkins admin password: ' value; echo
 printf '%s\n' "$value" > jenkins-lab/jenkins-secrets/jenkins-admin-password
@@ -96,10 +134,7 @@ printf '%s\n' "$value" > jenkins-lab/jenkins-secrets/github-pat
 unset value
 ```
 
-The Jenkins job checks out `main` from the repository configured in `jenkins-lab/jcasc/jenkins.yaml`. Update that URL if you use a fork, and push your Jenkinsfile changes before running the job.
-
 ### 2. Generate local HTTPS certificates
-
 ```bash
 openssl req -x509 -newkey rsa:2048 -sha256 -nodes -days 365 \
   -keyout jenkins-lab/jenkins-secrets/gateway-keystore.key \
@@ -114,20 +149,17 @@ openssl pkcs12 -export -name gateway \
 
 chmod 600 jenkins-lab/.env jenkins-lab/jenkins-secrets/*
 ```
+*(Enter the password configured for `SERVER_SSL_KEY_STORE_PASSWORD` in `buy01-env` when prompted).*
 
-Use **the same export password** you configured as `SERVER_SSL_KEY_STORE_PASSWORD` in `buy01-env`. These are self-signed **development** certificates, not public-production certificates.
-
-### 3. Start SonarQube and PostgreSQL
-
+### 3. Start SonarQube & PostgreSQL
 ```bash
 docker compose -f jenkins-lab/compose.yml config --quiet
 docker compose -f jenkins-lab/compose.yml up -d --wait --wait-timeout 900 sonar-db sonarqube
 ```
 
-Open **http://localhost:9000**. On a new instance, log in with `admin` / `admin`, change the default password, and go to **My Account → Security**. Generate an administrator **User Token** (not a Project Analysis Token).
-
-Save it without printing it:
-
+1. Open **http://localhost:9000** in your browser.
+2. Log in with `admin` / `admin`, set a new password, and navigate to **My Account → Security**.
+3. Generate an administrator **User Token** and store it:
 ```bash
 read -rsp 'SonarQube administrator User Token: ' sonar_admin_token; echo
 printf '%s\n' "$sonar_admin_token" > jenkins-lab/jenkins-secrets/sonar-bootstrap-token
@@ -136,150 +168,105 @@ chmod 600 jenkins-lab/jenkins-secrets/sonar-bootstrap-token
 ```
 
 ### 4. Provision SonarQube projects and tokens
-
 ```bash
 docker compose -f jenkins-lab/compose.yml --profile bootstrap run --rm sonar-init
 ```
+This script creates all 6 projects, generates individual analysis tokens, configures the quality gate, and registers the Jenkins webhook (`http://jenkins:8080/sonarqube-webhook/`).
 
-Successful output should end with `Provisioning complete; recreate Jenkins to load secret files`.
-
-The bootstrap prepares **six SonarQube projects**, their analysis tokens, and the internal Jenkins quality-gate webhook:
-
-| Component | SonarQube project key | Jenkins credential ID |
-| --- | --- | --- |
-| Product Service | `buy01-product-service` | `sonar-product-token` |
-| User Service | `buy01-user-service` | `sonar-user-token` |
-| Media Service | `buy01-media-service` | `sonar-media-token` |
-| API Gateway | `buy01-gateway` | `sonar-gateway-token` |
-| Eureka Discovery | `buy01-discovery` | `sonar-discovery-token` |
-| Angular frontend | `buy01-frontend` | `sonar-frontend-token` |
-
-**Why this step comes first:** Jenkins loads local analysis-token files when its startup configuration runs. SonarQube projects do not need to exist for Jenkins to define a server installation, but valid projects and tokens are required for successful scans.
-
-### 5. Start Jenkins
-
+### 5. Start Jenkins & Docker-in-Docker
 ```bash
 docker compose -f jenkins-lab/compose.yml up -d --build --wait --wait-timeout 900 docker jenkins
 docker compose -f jenkins-lab/compose.yml ps
 ```
+Open **http://localhost:8085** and log in with user `admin` and the password configured in step 1.
 
-Open **http://localhost:8085**, sign in as `admin` using the password from step 1, and verify:
+### 6. Run the CI/CD pipeline
+In Jenkins, open **`first-pipeline` → Build Now → Console Output**. The pipeline will:
+1. Run backend tests, package JARs, and produce JaCoCo coverage reports.
+2. Run Angular tests and produce LCOV coverage.
+3. Submit analyses for all 6 microservices to SonarQube and wait for Quality Gate approval.
+4. If and only if all gates pass, build tagged Docker images and deploy the microservices.
+5. Verify application health checks, automatically initiating rollback if health checks fail.
 
-- **Manage Jenkins → System → SonarQube installations** shows `SonarQube` at `http://sonarqube:9000`.
-- **Manage Jenkins → Credentials** contains the six SonarQube credential IDs.
-- The `first-pipeline` job exists.
+### 7. Access and verify the application
 
-**Important JCasC check:** Having SonarQube settings inside `/casc/jenkins.yaml` does **not** prove Jenkins applied them. In **Manage Jenkins → Configuration as Code**, check the **last applied configuration path** and verify that the server installation is actually visible. If Jenkins applies `/tmp/jenkins-base.yaml` without the Sonar section, investigate the startup/JCasC generation path instead of manually adding the server or clearing Docker volumes.
+| Service | Endpoint | Notes |
+|---|---|---|
+| **SafeZone Marketplace** | **https://localhost:4200** | Accept self-signed development certificate |
+| **Jenkins Controller** | **http://localhost:8085** | CI/CD pipeline management |
+| **SonarQube Dashboard** | **http://localhost:9000** | Code quality metrics & historical trends |
 
-### 6. Run the pipeline
-
-In Jenkins, open **`first-pipeline` → Build Now → Console Output**.
-
-The expected sequence is:
-
-1. Checkout from GitHub.
-2. Run backend tests, package JARs, and generate JaCoCo coverage.
-3. Run Angular tests, generate LCOV coverage, and build the frontend.
-4. Analyze all six projects in SonarQube and wait for their quality gates.
-5. Only if all gates pass, build Docker images tagged with the Jenkins build number.
-6. Deploy the application, check health, and attempt rollback when an eligible previous release exists and deployment health fails.
-
-A green Jenkins result is meaningful only if the deployment and health-check stages ran as expected. **This setup builds images locally inside Docker-in-Docker; it does not push images to Docker Hub.**
-
-### 7. Open and test the marketplace
-
-| Service | URL |
-| --- | --- |
-| Marketplace | **https://localhost:4200** |
-| Jenkins | http://localhost:8085 |
-| SonarQube | http://localhost:9000 |
-
-The browser may warn about the self-signed development certificate.
-
-Test the end-to-end flow: register as a **SELLER**, create a product and upload an image; then register as a **CLIENT** and confirm the product appears. Cloudinary credentials are required for uploads.
-
-Quick checks:
-
+Verify deployment health:
 ```bash
-curl -kfsS -o /dev/null https://localhost:4200/index.html
 curl -kfsS https://localhost:4200/actuator/health
 docker exec jenkins-docker docker ps
 ```
 
-The health response should include `"status":"UP"` when the gateway is healthy.
+---
 
-## Repository guide
+## Local Verification (Without Jenkins)
 
-| Path | Purpose |
-| --- | --- |
-| `Jenkinsfile` | CI/CD pipeline definition |
-| `jenkins-lab/compose.yml` | Jenkins, Docker-in-Docker, SonarQube, PostgreSQL |
-| `jenkins-lab/jcasc/jenkins.yaml` | Jenkins Configuration as Code source |
-| `jenkins-lab/docker-entrypoint.sh` | Loads local secrets and prepares Jenkins configuration |
-| `jenkins-lab/sonar-init/bootstrap.py` | Provisions SonarQube projects, tokens, and webhook |
-| `jenkins-lab/jenkins-secrets/` | Local credentials and certificates — **never commit** |
-| `product-service/`, `user-service/`, `media-service/` | Business microservices |
-| `gateway/`, `discovery/` | API routing and service discovery |
-| `frontend/` | Angular marketplace |
+You can also run tests, coverage, and SonarQube scans directly on your host machine:
 
-## Everyday commands
-
-Start existing infrastructure:
-
+### Run Frontend tests & coverage
 ```bash
-docker compose -f jenkins-lab/compose.yml up -d --build
+cd frontend
+npm ci
+npm run test:coverage
+npm run build
+cd ..
 ```
 
-Check status and logs:
-
+### Run Backend tests & coverage
 ```bash
-docker compose -f jenkins-lab/compose.yml ps
-docker compose -f jenkins-lab/compose.yml logs --tail=100 jenkins sonarqube
-docker exec jenkins-docker docker ps
+for service in product-service user-service media-service gateway discovery; do
+  (cd "$service" && bash ./mvnw -B clean verify)
+done
 ```
 
-After changing local secret files, recreate Jenkins so its entrypoint can reload them:
-
+### Run full SonarQube scan locally
+With SonarQube running at `http://localhost:9000` and `SONAR_TOKEN` set:
 ```bash
-docker compose -f jenkins-lab/compose.yml up -d --force-recreate jenkins
+SONAR_HOST_URL=http://localhost:9000 SONAR_TOKEN="<admin-token>" python3 .ci/sonar_ci.py
 ```
 
-Stop without deleting data:
+---
 
-```bash
-docker compose -f jenkins-lab/compose.yml stop
-```
+## Code Review & Merge Protection Process
 
-**Avoid `down -v` for routine troubleshooting:** it removes persistent data such as Jenkins and SonarQube state.
+To enforce the quality gate on pull requests:
+1. All changes must be made in feature/fix branches and submitted via **Pull Request**.
+2. **GitHub Actions** runs automatically on every PR commit, testing the proposed merge commit against all 6 SonarQube quality gates.
+3. For qualifying GitHub plans, apply the prepared branch-protection rule:
+   ```bash
+   gh api --method PUT repos/anasbaip/safe-zone/branches/main/protection --input .ci/main-protection.json
+   ```
+4. This requires:
+   * Mandatory passing of the `Tests and SonarQube gates` status check.
+   * At least one independent peer approval.
+   * Resolved discussion conversations.
+   * Prohibition of force pushes and branch deletion.
 
-## Troubleshooting
+---
 
-| Symptom | First thing to check |
-| --- | --- |
-| SonarQube Elasticsearch fails to start | Host `vm.max_map_count`, memory, and SonarQube logs |
-| `Number of installations ... 0` | Jenkins **System → SonarQube installations** and actual JCasC source applied |
-| `Not authorized to analyze` / HTTP 401 | Correct project key, matching analysis token, permissions |
-| Quality Gate times out | SonarQube webhook delivery to `http://jenkins:8080/sonarqube-webhook/` |
-| Coverage report missing | `target/site/jacoco/jacoco.xml` or `frontend/coverage/frontend/lcov.info` |
-| Docker image/container not visible on host | Inspect nested daemon with `docker exec jenkins-docker docker ps` |
-| MongoDB/PostgreSQL login fails after password change | Existing database volumes retain initialized credentials |
+## Daily Operations & Useful Commands
 
-For a full failure, inspect the **first real error** in Jenkins Console Output, not just the final `Finished: FAILURE` line. Never paste tokens or secret-file contents into issue reports.
+| Task | Command |
+|---|---|
+| Start lab services | `docker compose -f jenkins-lab/compose.yml up -d` |
+| View service logs | `docker compose -f jenkins-lab/compose.yml logs -f jenkins sonarqube` |
+| Inspect deployed containers | `docker exec jenkins-docker docker ps` |
+| Reload secrets into Jenkins | `docker compose -f jenkins-lab/compose.yml up -d --force-recreate jenkins` |
+| Stop all lab services | `docker compose -f jenkins-lab/compose.yml stop` |
 
-## Important limitations
+---
 
-- The GitHub webhook needs an externally reachable Jenkins URL; `localhost:8085` is not reachable by GitHub.
-- SonarQube Community Build does not provide native PR/branch analysis. The [GitHub quality workflow](.ci/README.md) performs isolated whole-code scans on every branch and PR without overwriting the main dashboard.
-- Bootstrap assigns the Buy01 Quality Gate: at least 80% overall/new-code coverage, zero overall bugs/vulnerabilities and zero new issues, at most 3% new duplication, and all new security hotspots reviewed. Frontend coverage additionally enforces 80% in four metrics.
-- The included self-signed certificates and Docker-in-Docker setup are intended for local development/lab use.
-- Rollback is conditional on a previous healthy release and is not a substitute for database migration planning.
+## Troubleshooting Guide
 
-## Quality checks and reviews
-
-See [.ci/README.md](.ci/README.md) for automatic scans, retained reports, required reviews, and the prepared GitHub branch-protection rule. Protected branches still require a qualifying GitHub plan for this private repository.
-
-## Project status
-
-The setup and pipeline above describe the **intended reproducible workflow**. Verify the live Jenkins build, quality-gate results, deployment, and application functionality before describing a release as successful.
-
-
+| Issue | Root Cause & Resolution |
+|---|---|
+| **SonarQube fails to start** | Elasticsearch requires `vm.max_map_count >= 524288`. Run `sudo sysctl -w vm.max_map_count=524288`. |
+| **Jenkins shows 0 SonarQube installations** | Verify that `sonar-bootstrap-token` exists and `docker compose ... --profile bootstrap run --rm sonar-init` was executed before Jenkins started. |
+| **SonarQube Quality Gate timeout in Jenkins** | Ensure SonarQube can reach Jenkins at `http://jenkins:8080/sonarqube-webhook/` across `jenkins-network`. |
+| **Missing coverage reports** | Verify that `target/site/jacoco/jacoco.xml` (backend) or `frontend/coverage/frontend/lcov.info` (frontend) was generated. |
+| **Docker containers not visible on host** | Deployed microservices run inside the nested Docker-in-Docker container. Check them with `docker exec jenkins-docker docker ps`. |
