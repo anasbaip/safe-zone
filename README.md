@@ -270,7 +270,7 @@ For a full failure, inspect the **first real error** in Jenkins Console Output, 
 
 - The GitHub webhook needs an externally reachable Jenkins URL; `localhost:8085` is not reachable by GitHub.
 - SonarQube Community Build does not provide native PR/branch analysis. The [GitHub quality workflow](.ci/README.md) performs isolated whole-code scans on every branch and PR without overwriting the main dashboard.
-- Bootstrap assigns the Buy01 Quality Gate: at least 80% overall/new-code coverage, zero overall bugs/vulnerabilities and zero new issues, at most 3% new duplication, and all new security hotspots reviewed. Frontend coverage additionally enforces 80% in four metrics.
+- Bootstrap assigns the Buy01 Quality Gate: at least 80% overall/new-code coverage, zero overall bugs/vulnerabilities and zero new issues, at most 3% new duplication, and all new security hotspots reviewed. Frontend coverage additionally enforces 80% in four metrics
 - The included self-signed certificates and Docker-in-Docker setup are intended for local development/lab use.
 - Rollback is conditional on a previous healthy release and is not a substitute for database migration planning.
 

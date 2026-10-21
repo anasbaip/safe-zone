@@ -1,28 +1,57 @@
 <header class="buy-navbar-wrapper sticky-top">
+  <div class="market-announcement">
+    Your next great find starts here. <span>Explore BUY01.</span>
+  </div>
   <nav class="navbar navbar-expand-lg buy-navbar px-3 px-lg-4" aria-label="Main navigation">
     <div class="container-fluid px-0">
       <!-- Brand Logo & Name -->
-      <a class="navbar-brand buy-brand d-flex align-items-center gap-2" routerLink="/products" (click)="closeMenu()">
+      <a
+        class="navbar-brand buy-brand d-flex align-items-center gap-2"
+        routerLink="/products"
+        (click)="closeMenu()"
+      >
         <span class="buy-brand-mark">01</span>
         <div class="d-flex flex-column">
           <span class="buy-brand-title">BUY01</span>
-          <span class="buy-brand-subtitle">Atelier</span>
+          <span class="buy-brand-subtitle">Everyday discoveries</span>
         </div>
       </a>
 
       <!-- Mobile Hamburger Button -->
-      <button 
-        class="navbar-toggler buy-toggler d-lg-none" 
-        type="button" 
+      <button
+        class="navbar-toggler buy-toggler d-lg-none"
+        type="button"
         (click)="toggleMenu()"
-        [attr.aria-expanded]="mobileMenuOpen()" 
-        aria-label="Toggle navigation menu">
-        <svg *ngIf="!mobileMenuOpen()" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        [attr.aria-expanded]="mobileMenuOpen()"
+        aria-label="Toggle navigation menu"
+        aria-controls="navbarContent"
+      >
+        <svg
+          *ngIf="!mobileMenuOpen()"
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <line x1="3" y1="6" x2="21" y2="6"></line>
           <line x1="3" y1="12" x2="21" y2="12"></line>
           <line x1="3" y1="18" x2="21" y2="18"></line>
         </svg>
-        <svg *ngIf="mobileMenuOpen()" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg
+          *ngIf="mobileMenuOpen()"
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
@@ -33,45 +62,79 @@
         <!-- Main Navigation Links -->
         <ul class="navbar-nav me-auto mb-2 mb-lg-0 buy-nav-links">
           <li class="nav-item">
-            <a class="nav-link buy-nav-link" routerLink="/products" routerLinkActive="active" (click)="closeMenu()">
-              Catalog
+            <a
+              class="nav-link buy-nav-link"
+              routerLink="/products"
+              routerLinkActive="active"
+              (click)="closeMenu()"
+            >
+              All products
             </a>
           </li>
 
           <li class="nav-item" *ngIf="auth.hasRole('SELLER')">
-            <a class="nav-link buy-nav-link" routerLink="/seller/dashboard" routerLinkActive="active" (click)="closeMenu()">
+            <a
+              class="nav-link buy-nav-link"
+              routerLink="/seller/dashboard"
+              routerLinkActive="active"
+              (click)="closeMenu()"
+            >
               Seller dashboard
             </a>
           </li>
 
           <li class="nav-item" *ngIf="auth.hasRole('SELLER')">
-            <a class="nav-link buy-nav-link" routerLink="/seller/media" routerLinkActive="active" (click)="closeMenu()">
-              Media archive
+            <a
+              class="nav-link buy-nav-link"
+              routerLink="/seller/media"
+              routerLinkActive="active"
+              (click)="closeMenu()"
+            >
+              Product media
             </a>
           </li>
         </ul>
 
         <!-- Right Side: Auth & User Profile -->
-        <div class="d-flex align-items-lg-center flex-column flex-lg-row gap-2 buy-auth-actions pt-2 pt-lg-0">
+        <div
+          class="d-flex align-items-lg-center flex-column flex-lg-row gap-2 buy-auth-actions pt-2 pt-lg-0"
+        >
           <ng-container *ngIf="auth.currentUser() as user; else unauth">
-            <a class="d-flex align-items-center gap-2 buy-user-pill" routerLink="/profile" routerLinkActive="active-profile" (click)="closeMenu()" aria-label="Open your profile">
+            <a
+              class="d-flex align-items-center gap-2 buy-user-pill"
+              routerLink="/profile"
+              routerLinkActive="active-profile"
+              (click)="closeMenu()"
+              aria-label="Open your profile"
+            >
               <!-- Avatar or Initials Fallback -->
-              <img *ngIf="user.avatarUrl" [src]="user.avatarUrl" class="buy-avatar" width="32" height="32" alt="User avatar">
+              <img
+                *ngIf="user.avatarUrl"
+                [src]="user.avatarUrl"
+                class="buy-avatar"
+                width="32"
+                height="32"
+                alt="User avatar"
+              />
               <div *ngIf="!user.avatarUrl" class="buy-avatar-fallback">
                 {{ getUserInitials(user.fullName, user.username) }}
               </div>
 
               <div class="d-flex flex-column text-start">
-                <span class="buy-user-name text-truncate" style="max-width: 140px;">
+                <span class="buy-user-name text-truncate" style="max-width: 140px">
                   {{ user.fullName || user.username }}
                 </span>
                 <span class="buy-user-role">
-                  {{ user.role === 'SELLER' ? 'Merchant' : 'Collector' }}
+                  {{ user.role === 'SELLER' ? 'Merchant' : 'Customer' }}
                 </span>
               </div>
             </a>
 
-            <button class="btn btn-outline-secondary btn-sm buy-logout-btn" (click)="auth.logout(); closeMenu()" title="Log out">
+            <button
+              class="btn btn-outline-secondary btn-sm buy-logout-btn"
+              (click)="auth.logout(); closeMenu()"
+              title="Log out"
+            >
               Log out
             </button>
           </ng-container>

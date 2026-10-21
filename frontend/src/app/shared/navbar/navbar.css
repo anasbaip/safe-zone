@@ -2,11 +2,15 @@
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--bg-surface-alt);
   z-index: 1030;
+  background: #17243b;
+  border: 0;
 }
 
 .buy-navbar {
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
+  max-width: 1320px;
+  margin: auto;
+  padding-top: 16px;
+  padding-bottom: 16px;
 }
 
 /* Brand Identity */
@@ -21,34 +25,35 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
   background-color: var(--bg-primary);
-  color: var(--accent);
   font-family: var(--font-display);
-  font-size: var(--type-sm);
   font-weight: 700;
-  border: 1px solid var(--bg-surface-alt);
-  border-radius: var(--radius-xs);
   letter-spacing: -0.02em;
+  background: #ffb547;
+  color: #17243b;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 12px;
+  font-size: 19px;
 }
 
 .buy-brand-title {
   font-family: var(--font-display);
-  font-size: var(--type-md);
-  font-weight: 700;
-  letter-spacing: -0.02em;
   line-height: 1;
-  color: var(--text-primary);
+  color: white;
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
 }
 
 .buy-brand-subtitle {
   font-family: var(--font-body);
-  font-size: var(--type-xs);
   font-weight: 400;
-  color: var(--text-muted);
   line-height: 1;
-  margin-top: 0.15rem;
+  color: #b9c6d9;
+  font-size: 10px;
+  margin-top: 5px;
 }
 
 /* Navigation Links */
@@ -60,7 +65,6 @@
 .buy-nav-link {
   display: inline-flex;
   align-items: center;
-  color: var(--text-muted) !important;
   font-family: var(--font-body);
   font-size: var(--type-sm);
   font-weight: 500;
@@ -68,16 +72,17 @@
   border-radius: var(--radius-xs);
   transition: color var(--transition-fast);
   position: relative;
+  color: #d3dce9 !important;
 }
 
 .buy-nav-link:hover {
-  color: var(--text-primary) !important;
   text-decoration: none;
+  color: white !important;
 }
 
 /* Active Nav State — Muted Brass Accent */
 .buy-nav-link.active {
-  color: var(--accent) !important;
+  color: #ffc879 !important;
 }
 
 .buy-nav-link.active::after {
@@ -89,16 +94,20 @@
   height: 2px;
   background-color: var(--accent);
   border-radius: var(--radius-xs);
+  background: #ffb547;
 }
 
 /* Mobile Toggler */
 .buy-toggler {
   border: 1px solid var(--bg-surface-alt);
-  color: var(--text-primary);
   padding: 0.375rem 0.5rem;
   border-radius: var(--radius-xs);
-  background: var(--bg-primary);
   transition: border-color var(--transition-fast);
+  color: white;
+  background: #22334f;
+  border-color: #3d4d66;
+  min-height: 44px;
+  min-width: 44px;
 }
 
 .buy-toggler:hover {
@@ -118,6 +127,8 @@
   padding: 0.35rem 0.75rem;
   border-radius: var(--radius-sm);
   transition: border-color var(--transition-fast);
+  background: #22334f;
+  border-color: #3d4d66;
 }
 
 .buy-user-pill:hover,
@@ -135,33 +146,36 @@
 .buy-avatar-fallback {
   width: 32px;
   height: 32px;
-  border-radius: var(--radius-xs);
   background-color: var(--bg-surface-alt);
-  color: var(--text-primary);
   font-family: var(--font-display);
   font-weight: 600;
   font-size: var(--type-xs);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--bg-surface-alt);
+  background: #ffb547;
+  color: #17243b;
+  border: 0;
+  border-radius: 50%;
 }
 
 .buy-user-name {
-  color: var(--text-primary);
   font-size: var(--type-sm);
   font-weight: 500;
   line-height: 1.2;
+  color: white;
 }
 
 .buy-user-role {
-  color: var(--text-muted);
   font-size: var(--type-xs);
   font-weight: 400;
+  color: #c2cddd;
 }
 
 .buy-logout-btn {
   font-size: var(--type-xs);
+  color: #d3dce9 !important;
+  border-color: #657286 !important;
 }
 
 @media (max-width: 991.98px) {
@@ -176,5 +190,27 @@
     border-top: 1px solid var(--bg-surface-alt);
     padding-top: 0.75rem;
     margin-top: 0.5rem;
+  }
+}
+.market-announcement {
+  background: #101c30;
+  text-align: center;
+  color: #d3dce9;
+  padding: 7px 16px;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+.market-announcement span {
+  color: #ffc879;
+  margin-left: 7px;
+}
+@media (max-width: 991px) {
+  .buy-nav-links,
+  .buy-auth-actions {
+    border-color: #3d4d66;
+  }
+  .buy-navbar {
+    padding-top: 12px;
+    padding-bottom: 12px;
   }
 }
