@@ -78,3 +78,23 @@
   color: var(--bg-surface-alt);
   user-select: none;
 }
+.app-main {
+  padding-top: 0 !important;
+}
+.app-footer {
+  padding: 32px 0;
+  background: #eaf0f6;
+}
+.app-footer-brand {
+  font-weight: 700;
+}
+.app-footer-tag {
+  border: 0;
+  padding-left: 8px;
+}
+@media (max-width: 575px) {
+  .app-footer-links {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}

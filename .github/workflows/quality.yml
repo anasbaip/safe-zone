@@ -11,7 +11,7 @@ permissions:
 concurrency:
   group: quality-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
-jobs:f
+jobs:
   quality:
     name: Tests and SonarQube gates
     runs-on: ubuntu-latest

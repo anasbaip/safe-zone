@@ -1,22 +1,55 @@
 <div class="container-xl py-4">
-  <!-- Page Header & Exhibition Hero -->
-  <header class="atelier-catalog-hero mb-4 p-4 p-md-5">
-    <div class="row align-items-baseline">
-      <div class="col-lg-9">
-        <span class="atelier-hero-kicker d-inline-block mb-2">Exhibition feed</span>
-        <h1 class="atelier-hero-title mb-2">Curated atelier collection</h1>
-        <p class="atelier-hero-copy mb-0">
-          Distinctive pieces and equipment directly from independent workshops, studios, and verified merchants.
-        </p>
+  <header class="market-hero mb-4">
+    <div class="market-hero-copy">
+      <span class="market-eyebrow">THE EVERYDAY DISCOVERY</span>
+      <h1>Find your next<br /><span>great find.</span></h1>
+      <p>
+        Explore independent sellers, discover something different, and make the everyday a little
+        better.
+      </p>
+      <a href="#catalog" class="btn btn-primary"
+        >Explore the collection <span aria-hidden="true">↗</span></a
+      >
+      <span class="hero-note">A whole marketplace. One place to explore.</span>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <div class="art-orbit"></div>
+      <div class="shopping-bag bag-back"><span>01</span></div>
+      <div class="shopping-bag bag-front">
+        <span>buy<span class="bag-dot">.</span></span>
       </div>
-      <div class="col-lg-3 text-lg-end mt-3 mt-lg-0">
-        <div class="atelier-count-block">
-          <span class="atelier-count-number">{{ products().length }}</span>
-          <span class="atelier-count-label">Active listings</span>
-        </div>
-      </div>
+      <div class="art-label">A little discovery.<br /><strong>A lot to love.</strong></div>
+      <span class="art-spark">✦</span>
     </div>
   </header>
+  <div class="market-benefits mb-4" aria-label="Marketplace features">
+    <div>
+      <span class="benefit-icon" aria-hidden="true">◇</span
+      ><span
+        ><strong>Discover more</strong><small>Find products from independent sellers</small></span
+      >
+    </div>
+    <div>
+      <span class="benefit-icon" aria-hidden="true">▤</span
+      ><span
+        ><strong>Details at a glance</strong
+        ><small>Compare prices and product information</small></span
+      >
+    </div>
+    <div>
+      <span class="benefit-icon" aria-hidden="true">◎</span
+      ><span
+        ><strong>Shop your way</strong><small>Search, sort, and explore at your pace</small></span
+      >
+    </div>
+  </div>
+  <div id="catalog" class="catalog-heading">
+    <div>
+      <span class="market-eyebrow">TAKE A LOOK AROUND</span>
+      <h2>Explore the marketplace</h2>
+    </div>
+    <span class="catalog-count">{{ products().length }} products to discover</span>
+  </div>
 
   <!-- Search & Filter Toolbar -->
   <div class="atelier-toolbar mb-4 p-3 buy-card">
@@ -25,24 +58,36 @@
       <div class="col-md-5 col-lg-6">
         <div class="input-group">
           <span class="input-group-text border-end-0">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
           </span>
-          <input 
-            type="search" 
-            class="form-control border-start-0 ps-0" 
-            placeholder="Search listings by title or craft description..." 
-            [ngModel]="searchQuery()" 
+          <input
+            type="search"
+            class="form-control border-start-0 ps-0"
+            placeholder="Search products, brands, and more..."
+            [ngModel]="searchQuery()"
             (ngModelChange)="searchQuery.set($event)"
-            aria-label="Search products">
-          <button 
-            *ngIf="searchQuery()" 
-            class="btn btn-outline-secondary border-start-0" 
-            type="button" 
+            aria-label="Search products"
+          />
+          <button
+            *ngIf="searchQuery()"
+            class="btn btn-outline-secondary border-start-0"
+            type="button"
             (click)="searchQuery.set('')"
-            title="Clear search">
+            title="Clear search"
+            aria-label="Clear search"
+          >
             ✕
           </button>
         </div>
@@ -52,56 +97,78 @@
       <div class="col-sm-6 col-md-3 col-lg-3">
         <div class="d-flex align-items-center gap-2">
           <label for="sortSelect" class="form-label mb-0 text-nowrap small">Sort:</label>
-          <select 
-            id="sortSelect" 
-            class="form-select form-select-sm" 
-            [ngModel]="sortBy()" 
-            (ngModelChange)="sortBy.set($event)">
-            <option value="featured">Featured selection</option>
+          <select
+            id="sortSelect"
+            class="form-select form-select-sm"
+            [ngModel]="sortBy()"
+            (ngModelChange)="sortBy.set($event)"
+          >
+            <option value="featured">Featured</option>
             <option value="price-asc">Price: low to high</option>
             <option value="price-desc">Price: high to low</option>
-            <option value="name-asc">Title: a to z</option>
+            <option value="name-asc">Name: A to Z</option>
           </select>
         </div>
       </div>
 
       <!-- Stock Filter & View Toggle -->
-      <div class="col-sm-6 col-md-4 col-lg-3 d-flex justify-content-sm-end align-items-center gap-2">
-        <select 
-          class="form-select form-select-sm" 
-          style="max-width: 140px;"
-          [ngModel]="filterStock()" 
+      <div
+        class="col-sm-6 col-md-4 col-lg-3 d-flex justify-content-sm-end align-items-center gap-2"
+      >
+        <select
+          class="form-select form-select-sm"
+          style="max-width: 140px"
+          [ngModel]="filterStock()"
           (ngModelChange)="filterStock.set($event)"
-          aria-label="Filter inventory availability">
-          <option value="all">All listings</option>
+          aria-label="Filter inventory availability"
+        >
+          <option value="all">All products</option>
           <option value="in-stock">In stock only</option>
         </select>
 
-        <fieldset class="btn-group btn-group-sm"  aria-label="Layout view switcher">
-          <button 
-            type="button" 
-            class="btn" 
-            [class.btn-primary]="viewMode() === 'grid'" 
+        <fieldset class="btn-group btn-group-sm" aria-label="Layout view switcher">
+          <button
+            type="button"
+            class="btn"
+            [attr.aria-pressed]="viewMode() === 'grid'"
+            [class.btn-primary]="viewMode() === 'grid'"
             [class.btn-outline-secondary]="viewMode() !== 'grid'"
             (click)="viewMode.set('grid')"
-            title="Gallery view"
-            aria-label="Gallery layout view">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            title="Grid view"
+            aria-label="Grid layout view"
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <rect x="3" y="3" width="7" height="7"></rect>
               <rect x="14" y="3" width="7" height="7"></rect>
               <rect x="14" y="14" width="7" height="7"></rect>
               <rect x="3" y="14" width="7" height="7"></rect>
             </svg>
           </button>
-          <button 
-            type="button" 
-            class="btn" 
-            [class.btn-primary]="viewMode() === 'list'" 
+          <button
+            type="button"
+            class="btn"
+            [attr.aria-pressed]="viewMode() === 'list'"
+            [class.btn-primary]="viewMode() === 'list'"
             [class.btn-outline-secondary]="viewMode() !== 'list'"
             (click)="viewMode.set('list')"
-            title="Index view"
-            aria-label="Index layout view">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            title="List view"
+            aria-label="List layout view"
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <line x1="8" y1="6" x2="21" y2="6"></line>
               <line x1="8" y1="12" x2="21" y2="12"></line>
               <line x1="8" y1="18" x2="21" y2="18"></line>
@@ -115,14 +182,18 @@
     </div>
 
     <!-- Active Filter Feedback Row -->
-    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top small text-muted">
+    <div
+      class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top small text-muted"
+    >
       <span>
-        Showing <strong class="text-primary">{{ filteredProducts().length }}</strong> of {{ products().length }} catalog items
+        Showing <strong class="text-primary">{{ filteredProducts().length }}</strong> of
+        {{ products().length }} products
       </span>
-      <button 
-        *ngIf="searchQuery() || filterStock() !== 'all' || sortBy() !== 'featured'" 
-        class="btn btn-link btn-sm p-0 text-muted" 
-        (click)="clearSearch()">
+      <button
+        *ngIf="searchQuery() || filterStock() !== 'all' || sortBy() !== 'featured'"
+        class="btn btn-link btn-sm p-0 text-muted"
+        (click)="clearSearch()"
+      >
         Reset all filters
       </button>
     </div>
@@ -132,10 +203,10 @@
   <div *ngIf="loading()" class="atelier-gallery-grid mb-4">
     <div class="atelier-grid-tile" *ngFor="let placeholder of [1, 2, 3, 4, 5, 6]">
       <div class="buy-card p-0 h-100 overflow-hidden">
-        <div class="skeleton" style="height: 260px; width: 100%;"></div>
+        <div class="skeleton" style="height: 260px; width: 100%"></div>
         <div class="p-3">
-          <div class="skeleton mb-2" style="height: 20px; width: 70%;"></div>
-          <div class="skeleton" style="height: 14px; width: 90%;"></div>
+          <div class="skeleton mb-2" style="height: 20px; width: 70%"></div>
+          <div class="skeleton" style="height: 14px; width: 90%"></div>
         </div>
       </div>
     </div>
@@ -149,61 +220,83 @@
   </div>
 
   <!-- Empty Results State -->
-  <div *ngIf="!loading() && !loadError() && filteredProducts().length === 0" class="p-5 text-center my-4 buy-card">
-    <h2 class="h5 mb-2">No matching pieces found</h2>
+  <div
+    *ngIf="!loading() && !loadError() && filteredProducts().length === 0"
+    class="p-5 text-center my-4 buy-card"
+  >
+    <h2 class="h5 mb-2">No matching products found</h2>
     <p class="text-muted mb-4" *ngIf="searchQuery()">
-      No pieces matched "{{ searchQuery() }}". Try adjusting your search query or reset the inventory filter.
+      No products matched "{{ searchQuery() }}". Try adjusting your search query or reset the
+      inventory filter.
     </p>
     <p class="text-muted mb-4" *ngIf="!searchQuery() && products().length === 0">
-      There are currently no items published in this exhibition.
+      New discoveries are on the way. Check back soon.
     </p>
-    <button class="btn btn-secondary btn-sm" (click)="clearSearch()" *ngIf="searchQuery() || filterStock() !== 'all'">
+    <button
+      class="btn btn-secondary btn-sm"
+      (click)="clearSearch()"
+      *ngIf="searchQuery() || filterStock() !== 'all'"
+    >
       Clear filters
     </button>
   </div>
 
   <!-- Data View: ASYMMETRIC GALLERY-WALL GRID -->
-  <div 
-    class="atelier-gallery-grid" 
-    *ngIf="!loading() && !loadError() && filteredProducts().length > 0 && viewMode() === 'grid'">
-    
-    <div 
-      class="atelier-grid-tile" 
+  <div
+    class="atelier-gallery-grid"
+    *ngIf="!loading() && !loadError() && filteredProducts().length > 0 && viewMode() === 'grid'"
+  >
+    <div
+      class="atelier-grid-tile"
       *ngFor="let p of filteredProducts(); let i = index"
       [class.tile-feature]="i % 7 === 0"
       [class.tile-medium]="i % 7 === 1 || i % 7 === 5"
-      [class.tile-compact]="i % 7 >= 2 && i % 7 <= 4">
-      
-      <article class="buy-card buy-card-hover h-100 d-flex flex-column product-card atelier-piece-card">
+      [class.tile-compact]="i % 7 >= 2 && i % 7 <= 4"
+    >
+      <article
+        class="buy-card buy-card-hover h-100 d-flex flex-column product-card atelier-piece-card"
+      >
         <!-- Hero Photography (Full-bleed) -->
         <div class="product-image-container position-relative">
-          <img 
-            *ngIf="getPrimaryImage(p)" 
-            [src]="getPrimaryImage(p)" 
-            class="product-image" 
+          <img
+            *ngIf="getPrimaryImage(p)"
+            [src]="getPrimaryImage(p)"
+            class="product-image"
             [alt]="p.name"
             loading="lazy"
-            (error)="onImageError($event)">
-          
+            (error)="onImageError($event)"
+          />
+
           <!-- Fallback Image Placeholder -->
-          <div class="product-image-fallback" [style.display]="getPrimaryImage(p) ? 'none' : 'flex'">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <div
+            class="product-image-fallback"
+            [style.display]="getPrimaryImage(p) ? 'none' : 'flex'"
+          >
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
               <circle cx="8.5" cy="8.5" r="1.5"></circle>
               <polyline points="21 15 16 10 5 21"></polyline>
             </svg>
-            <span class="small text-muted mt-2">Unphotographed</span>
+            <span class="small text-muted mt-2">Image coming soon</span>
           </div>
 
           <!-- Inventory Status Tag -->
-          <span 
+          <span
             class="buy-badge position-absolute bottom-0 start-0 m-3"
             [class.buy-badge-success]="p.quantity > 3"
             [class.buy-badge-warning]="p.quantity > 0 && p.quantity <= 3"
-            [class.buy-badge-danger]="p.quantity === 0">
+            [class.buy-badge-danger]="p.quantity === 0"
+          >
             <span *ngIf="p.quantity > 3">In stock</span>
             <span *ngIf="p.quantity > 0 && p.quantity <= 3">Low stock</span>
-            <span *ngIf="p.quantity === 0">Archived</span>
+            <span *ngIf="p.quantity === 0">Out of stock</span>
           </span>
         </div>
 
@@ -211,11 +304,11 @@
         <div class="p-3 p-md-4 d-flex flex-column flex-grow-1">
           <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
             <h2 class="product-title h5 mb-0 text-truncate" [title]="p.name">{{ p.name }}</h2>
-            <span class="atelier-price text-nowrap">${{ p.price | number:'1.2-2' }}</span>
+            <span class="atelier-price text-nowrap">${{ p.price | number: '1.2-2' }}</span>
           </div>
-          
+
           <p class="product-desc small text-muted mb-3 flex-grow-1">
-            {{ p.description || 'Crafted piece catalog item.' }}
+            {{ p.description || 'Explore this product for more details.' }}
           </p>
 
           <!-- Footer Actions -->
@@ -223,11 +316,12 @@
             <span class="text-muted small">
               {{ p.quantity > 0 ? p.quantity + ' available' : 'Sold out' }}
             </span>
-            <button 
-              class="btn btn-outline-secondary btn-sm" 
+            <button
+              class="btn btn-outline-secondary btn-sm"
               (click)="openQuickView(p)"
-              [attr.aria-label]="'Quick view ' + p.name">
-              Inspect piece
+              [attr.aria-label]="'Quick view ' + p.name"
+            >
+              View product
             </button>
           </div>
         </div>
@@ -236,22 +330,33 @@
   </div>
 
   <!-- Data View: LIST MODE (Index View) -->
-  <div 
-    class="d-flex flex-column gap-3" 
-    *ngIf="!loading() && !loadError() && filteredProducts().length > 0 && viewMode() === 'list'">
-    
+  <div
+    class="d-flex flex-column gap-3"
+    *ngIf="!loading() && !loadError() && filteredProducts().length > 0 && viewMode() === 'list'"
+  >
     <div class="buy-card buy-card-hover p-3" *ngFor="let p of filteredProducts()">
       <div class="row align-items-center g-3">
         <div class="col-auto">
           <div class="product-list-thumb position-relative overflow-hidden">
-            <img 
-              *ngIf="getPrimaryImage(p)" 
-              [src]="getPrimaryImage(p)" 
-              class="w-100 h-100 object-fit-cover" 
+            <img
+              *ngIf="getPrimaryImage(p)"
+              [src]="getPrimaryImage(p)"
+              class="w-100 h-100 object-fit-cover"
               [alt]="p.name"
-              (error)="onImageError($event)">
-            <div class="product-image-fallback w-100 h-100" [style.display]="getPrimaryImage(p) ? 'none' : 'flex'">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              (error)="onImageError($event)"
+            />
+            <div
+              class="product-image-fallback w-100 h-100"
+              [style.display]="getPrimaryImage(p) ? 'none' : 'flex'"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
                 <rect x="3" y="3" width="18" height="18" rx="2"></rect>
               </svg>
             </div>
@@ -261,23 +366,24 @@
         <div class="col">
           <div class="d-flex align-items-center gap-2 mb-1">
             <h2 class="h5 mb-0">{{ p.name }}</h2>
-            <span 
+            <span
               class="buy-badge"
               [class.buy-badge-success]="p.quantity > 3"
               [class.buy-badge-warning]="p.quantity > 0 && p.quantity <= 3"
-              [class.buy-badge-danger]="p.quantity === 0">
-              {{ p.quantity > 0 ? 'Stock: ' + p.quantity : 'Archived' }}
+              [class.buy-badge-danger]="p.quantity === 0"
+            >
+              {{ p.quantity > 0 ? 'Stock: ' + p.quantity : 'Out of stock' }}
             </span>
           </div>
-          <p class="text-muted small mb-0 text-truncate" style="max-width: 600px;">
-            {{ p.description || 'Crafted piece catalog item.' }}
+          <p class="text-muted small mb-0 text-truncate" style="max-width: 600px">
+            {{ p.description || 'Explore this product for more details.' }}
           </p>
         </div>
 
         <div class="col-auto text-end">
-          <div class="fs-5 fw-semibold mb-2">${{ p.price | number:'1.2-2' }}</div>
+          <div class="fs-5 fw-semibold mb-2">${{ p.price | number: '1.2-2' }}</div>
           <button class="btn btn-outline-secondary btn-sm" (click)="openQuickView(p)">
-            Inspect piece
+            View product
           </button>
         </div>
       </div>
@@ -286,39 +392,51 @@
 
   <!-- INTERACTIVE QUICK VIEW MODAL -->
   <dialog
-    class="buy-modal-backdrop" 
-    *ngIf="selectedProduct() as item" 
-    (click)="$event.target === $event.currentTarget && closeQuickView()" (keydown.escape)="closeQuickView()"
+    class="buy-modal-backdrop"
+    *ngIf="selectedProduct() as item"
+    (click)="$event.target === $event.currentTarget && closeQuickView()"
+    (keydown.escape)="closeQuickView()"
     open
     aria-modal="true"
-    [attr.aria-label]="item.name">
-    
+    [attr.aria-label]="item.name"
+  >
     <div class="buy-modal-content p-4">
       <!-- Modal Header -->
       <div class="d-flex justify-content-between align-items-start pb-3 border-bottom mb-3">
         <div>
-          <span class="buy-badge buy-badge-neutral mb-1">Piece exhibition</span>
+          <span class="buy-badge buy-badge-neutral mb-1">Product details</span>
           <h2 class="h4 mb-0">{{ item.name }}</h2>
         </div>
-        <button 
-          type="button" 
-          class="btn-close" 
-          (click)="closeQuickView()" 
-          aria-label="Close dialog"></button>
+        <button
+          type="button"
+          class="btn-close"
+          (click)="closeQuickView()"
+          aria-label="Close dialog"
+        ></button>
       </div>
 
       <!-- Modal Body -->
       <div class="row g-4">
         <!-- Full-Bleed Gallery Preview -->
         <div class="col-md-6">
-          <div class="modal-main-img-box mb-2 overflow-hidden d-flex align-items-center justify-content-center">
-            <img 
-              *ngIf="activeModalImage()" 
-              [src]="activeModalImage()" 
-              class="w-100 h-100 object-fit-cover" 
-              [alt]="item.name">
+          <div
+            class="modal-main-img-box mb-2 overflow-hidden d-flex align-items-center justify-content-center"
+          >
+            <img
+              *ngIf="activeModalImage()"
+              [src]="activeModalImage()"
+              class="w-100 h-100 object-fit-cover"
+              [alt]="item.name"
+            />
             <div *ngIf="!activeModalImage()" class="text-muted p-4 text-center">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <svg
+                width="40"
+                height="40"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
                 <rect x="3" y="3" width="18" height="18" rx="2"></rect>
               </svg>
               <div class="small mt-2">No photo attached</div>
@@ -327,14 +445,15 @@
 
           <!-- Thumbnails Row -->
           <div class="d-flex gap-2 flex-wrap" *ngIf="item.images && item.images.length > 1">
-            <button 
-              *ngFor="let img of item.images" 
-              type="button" 
+            <button
+              *ngFor="let img of item.images"
+              type="button"
               class="modal-thumb-btn"
               [class.active-thumb]="activeModalImage() === img"
               (click)="setActiveModalImage(img)"
-              aria-label="View photo thumbnail">
-              <img [src]="img" class="w-100 h-100 object-fit-cover" alt="Thumbnail">
+              aria-label="View photo thumbnail"
+            >
+              <img [src]="img" class="w-100 h-100 object-fit-cover" alt="Thumbnail" />
             </button>
           </div>
         </div>
@@ -342,39 +461,39 @@
         <!-- Product Information -->
         <div class="col-md-6 d-flex flex-column">
           <div class="mb-3">
-            <span class="text-muted small d-block mb-1">Acquisition price</span>
-            <span class="fs-3 fw-bold atelier-price">${{ item.price | number:'1.2-2' }}</span>
+            <span class="text-muted small d-block mb-1">Price</span>
+            <span class="fs-3 fw-bold atelier-price">${{ item.price | number: '1.2-2' }}</span>
           </div>
 
           <div class="mb-3">
             <span class="text-muted small d-block mb-1">Availability</span>
-            <span 
+            <span
               class="buy-badge"
               [class.buy-badge-success]="item.quantity > 3"
               [class.buy-badge-warning]="item.quantity > 0 && item.quantity <= 3"
-              [class.buy-badge-danger]="item.quantity === 0">
+              [class.buy-badge-danger]="item.quantity === 0"
+            >
               {{ item.quantity > 0 ? item.quantity + ' units available in stock' : 'Out of stock' }}
             </span>
           </div>
 
           <div class="mb-4">
-            <span class="text-muted small d-block mb-1">Specifications & craftsmanship</span>
+            <span class="text-muted small d-block mb-1">About this product</span>
             <p class="text-muted small p-3 rounded buy-card mb-0">
-              {{ item.description || 'No detailed specifications recorded for this piece.' }}
+              {{ item.description || 'The seller has not added a description yet.' }}
             </p>
           </div>
 
           <div class="mt-auto pt-3 border-top d-flex gap-2">
             <!-- Single Brass CTA -->
-            <button 
-              class="btn btn-primary flex-grow-1" 
+            <button
+              class="btn btn-primary flex-grow-1"
               (click)="addToOrder(item)"
-              [disabled]="item.quantity === 0">
-              Reserve piece
+              [disabled]="item.quantity === 0"
+            >
+              Request this item
             </button>
-            <button class="btn btn-secondary" (click)="closeQuickView()">
-              Close
-            </button>
+            <button class="btn btn-secondary" (click)="closeQuickView()">Close</button>
           </div>
         </div>
       </div>
@@ -382,7 +501,7 @@
   </dialog>
 
   <!-- Toast Notification Container -->
-  <div class="buy-toast-container" *ngIf="toastMessage()">
+  <div class="buy-toast-container" role="status" aria-live="polite" *ngIf="toastMessage()">
     <div class="buy-toast">
       <span>{{ toastMessage() }}</span>
     </div>
