@@ -501,9 +501,9 @@
   </dialog>
 
   <!-- Toast Notification Container -->
-  <div class="buy-toast-container" role="status" aria-live="polite" *ngIf="toastMessage()">
+  <output class="buy-toast-container" aria-live="polite" *ngIf="toastMessage()">
     <div class="buy-toast">
       <span>{{ toastMessage() }}</span>
     </div>
-  </div>
+  </output>
 </div>

@@ -45,7 +45,6 @@
 
   /* Backwards Compatibility / Shared Token Aliases */
   --buy-brand-primary: var(--accent);
-  --buy-brand-primary-hover: var(--accent);
   --buy-brand-primary-light: var(--bg-surface);
   --buy-brand-primary-border: var(--bg-surface-alt);
   --buy-bg-canvas: var(--bg-primary);
@@ -58,13 +57,11 @@
   --buy-border: var(--bg-surface-alt);
   --buy-border-strong: var(--bg-surface-alt);
   --buy-success: var(--success);
-  --buy-success-bg: var(--bg-surface);
   --buy-success-border: var(--success);
   --buy-warning: var(--accent);
   --buy-warning-bg: var(--bg-surface);
   --buy-warning-border: var(--accent);
   --buy-danger: var(--danger);
-  --buy-danger-bg: var(--bg-surface);
   --buy-danger-border: var(--danger);
   --buy-shadow-xs: none;
   --buy-shadow-sm: none;
@@ -80,6 +77,9 @@
   --buy-radius-lg: var(--radius-lg);
   --buy-radius-xl: var(--radius-lg);
   --buy-radius-pill: var(--radius-pill);
+  --buy-brand-primary-hover: #983c06;
+  --buy-success-bg: #eaf6ef;
+  --buy-danger-bg: #fff0f1;
 }
 
 /* ==========================================================================
@@ -239,16 +239,16 @@ textarea:focus-visible {
 
 /* Primary CTA: The intentional single brass moment */
 .btn-primary {
-  background-color: var(--accent) !important;
-  border-color: var(--accent) !important;
-  color: var(--bg-primary) !important;
   font-weight: 600;
+  background-color: #ffb547 !important;
+  border-color: #ffb547 !important;
+  color: #17243b !important;
 }
 
 .btn-primary:hover {
-  background-color: var(--text-primary) !important;
-  border-color: var(--text-primary) !important;
-  color: var(--bg-primary) !important;
+  background-color: #ff9c21 !important;
+  border-color: #ff9c21 !important;
+  color: #17243b !important;
 }
 
 .btn-outline-primary {
@@ -368,8 +368,8 @@ textarea:focus-visible {
   background-color: var(--bg-surface);
   border: 1px solid var(--bg-surface-alt);
   border-radius: var(--radius-md);
-  box-shadow: none !important;
   transition: border-color var(--transition-fast);
+  box-shadow: 0 3px 14px #17243b05 !important;
 }
 
 .buy-card-hover,
@@ -506,13 +506,13 @@ textarea:focus-visible {
   color: var(--text-primary);
   border-radius: var(--radius-md);
   border: 1px solid var(--bg-surface-alt);
-  box-shadow: none !important;
   width: 100%;
-  max-width: 680px;
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
   animation: atelierModalIn 0.16s ease-out;
+  max-width: 820px;
+  box-shadow: 0 24px 80px #0003 !important;
 }
 
 .btn-close {
@@ -599,6 +599,9 @@ textarea:focus-visible {
   background-color: var(--bg-surface-alt);
   border-radius: var(--radius-xs);
   opacity: 0.6;
+  background: linear-gradient(100deg, #e5eaf0 25%, #f2f5f8 50%, #e5eaf0 75%);
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
 }
 
 /* ==========================================================================
@@ -653,28 +656,9 @@ textarea:focus-visible {
 }
 
 /* Marketplace theme: shared across catalog, account, and seller screens. */
-:root {
-  --buy-brand-primary-hover: #983c06;
-  --buy-success-bg: #eaf6ef;
-  --buy-danger-bg: #fff0f1;
-}
-.btn-primary {
-  background-color: #ffb547 !important;
-  border-color: #ffb547 !important;
-  color: #17243b !important;
-}
-.btn-primary:hover {
-  background-color: #ff9c21 !important;
-  border-color: #ff9c21 !important;
-  color: #17243b !important;
-}
 .btn-danger,
 .btn-outline-danger:hover {
   color: #fff !important;
-}
-.buy-card,
-.atelier-card {
-  box-shadow: 0 3px 14px #17243b05 !important;
 }
 .buy-card-hover:hover {
   box-shadow: 0 8px 24px #17243b0e !important;
@@ -687,15 +671,6 @@ textarea:focus-visible {
 }
 .buy-badge-danger {
   background: #fff0f1 !important;
-}
-.buy-modal-content {
-  max-width: 820px;
-  box-shadow: 0 24px 80px #0003 !important;
-}
-.skeleton {
-  background: linear-gradient(100deg, #e5eaf0 25%, #f2f5f8 50%, #e5eaf0 75%);
-  background-size: 200% 100%;
-  animation: loading-shimmer 1.5s infinite;
 }
 @keyframes loading-shimmer {
   to {
