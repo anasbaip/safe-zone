@@ -132,6 +132,50 @@ services:
 
 
   # =========================================================
+  # Order MongoDB
+  # =========================================================
+  order-mongodb:
+    image: mongo:7
+    container_name: order-mongodb
+    restart: unless-stopped
+
+    ports:
+      - "127.0.0.1:27021:27017"
+
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_ROOT_USERNAME}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_ROOT_PASSWORD}"
+      MONGO_DATABASE: "${ORDER_MONGO_DATABASE}"
+      MONGO_USERNAME: "${ORDER_MONGO_USERNAME}"
+      MONGO_PASSWORD: "${ORDER_MONGO_PASSWORD}"
+
+    volumes:
+      - order_mongo_data:/data/db
+      - ./docker/mongo/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+
+    networks:
+      - order-db-network
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mongosh",
+          "admin",
+          "-u",
+          "${MONGO_ROOT_USERNAME}",
+          "-p",
+          "${MONGO_ROOT_PASSWORD}",
+          "--eval",
+          "db.runCommand({ ping: 1 })"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+
+  # =========================================================
   # Kafka
   # =========================================================
   kafka:
@@ -412,6 +456,50 @@ services:
 
 
   # =========================================================
+  # Order Service
+  # =========================================================
+  order-service:
+    image: order-service:${APP_IMAGE_TAG:?APP_IMAGE_TAG is required}
+    container_name: buy01-order-service
+    restart: unless-stopped
+
+    environment:
+      SERVER_PORT: "8084"
+
+      EUREKA_CLIENT_SERVICE_URL: "http://discovery:8761/eureka/"
+
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery:8761/eureka/"
+
+      MONGODB_URI: "mongodb://${ORDER_MONGO_USERNAME}:${ORDER_MONGO_PASSWORD}@order-mongodb:27017/${ORDER_MONGO_DATABASE}?authSource=${ORDER_MONGO_DATABASE}"
+
+      SPRING_MONGODB_URI: "mongodb://${ORDER_MONGO_USERNAME}:${ORDER_MONGO_PASSWORD}@order-mongodb:27017/${ORDER_MONGO_DATABASE}?authSource=${ORDER_MONGO_DATABASE}"
+
+      SPRING_DATA_MONGODB_URI: "mongodb://${ORDER_MONGO_USERNAME}:${ORDER_MONGO_PASSWORD}@order-mongodb:27017/${ORDER_MONGO_DATABASE}?authSource=${ORDER_MONGO_DATABASE}"
+
+    depends_on:
+      discovery:
+        condition: service_healthy
+
+      order-mongodb:
+        condition: service_healthy
+
+    networks:
+      - buy01-network
+      - order-db-network
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://127.0.0.1:8084/actuator/health || exit 1"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+
+  # =========================================================
   # Frontend
   # =========================================================
   frontend:
@@ -456,6 +544,8 @@ volumes:
 
   user_mongo_data:
 
+  order_mongo_data:
+
 
 # =========================================================
 # Docker Networks
@@ -472,4 +562,7 @@ networks:
     driver: bridge
 
   user-db-network:
+    driver: bridge
+
+  order-db-network:
     driver: bridge
