@@ -49,6 +49,14 @@ pipeline {
             }
         }
 
+        stage('Order Service Tests') {
+            steps {
+                dir('order-service') {
+                    sh './mvnw -B clean test'
+                }
+            }
+        }
+
         stage('Gateway Tests') {
             steps {
                 withCredentials([
@@ -102,6 +110,9 @@ pipeline {
                 dir('media-service') {
                     sh './mvnw -B verify -DskipTests'
                 }
+                dir('order-service') {
+                    sh './mvnw -B verify -DskipTests'
+                }
                 withCredentials([file(credentialsId: 'buy01-env', variable: 'ENV_FILE')]) {
                     dir('gateway') {
                         sh '''
@@ -131,6 +142,8 @@ pipeline {
                     ls -lh user-service/target/*.jar
                     echo "=== Media Service ==="
                     ls -lh media-service/target/*.jar
+                    echo "=== Order Service ==="
+                    ls -lh order-service/target/*.jar
                     echo "=== Gateway ==="
                     ls -lh gateway/target/*.jar
                     echo "=== Discovery ==="
@@ -157,7 +170,7 @@ pipeline {
         stage('Coverage') {
             steps {
                 sh '''
-                    for component in product-service user-service media-service gateway discovery; do
+                    for component in product-service user-service media-service order-service gateway discovery; do
                         test -s "$component/target/site/jacoco/jacoco.xml"
                     done
                     test -s frontend/coverage/frontend/lcov.info
@@ -174,6 +187,7 @@ pipeline {
                         ['product-service', 'product', 'buy01-product-service'],
                         ['user-service', 'user', 'buy01-user-service'],
                         ['media-service', 'media', 'buy01-media-service'],
+                        ['order-service', 'order', 'buy01-order-service'],
                         ['gateway', 'gateway', 'buy01-gateway'],
                         ['discovery', 'discovery', 'buy01-discovery'],
                         ['frontend', 'frontend', 'buy01-frontend']
@@ -264,6 +278,18 @@ pipeline {
             }
         }
 
+        stage('Build Order Image') {
+            steps {
+                dir('order-service') {
+                    sh '''
+                        docker build \\
+                            -t order-service:${BUILD_NUMBER} \\
+                            .
+                    '''
+                }
+            }
+        }
+
         stage('Build Gateway Image') {
             steps {
                 dir('gateway') {
@@ -312,6 +338,7 @@ pipeline {
                     docker image inspect product-service:${BUILD_NUMBER} > /dev/null
                     docker image inspect user-service:${BUILD_NUMBER} > /dev/null
                     docker image inspect media-service:${BUILD_NUMBER} > /dev/null
+                    docker image inspect order-service:${BUILD_NUMBER} > /dev/null
                     docker image inspect gateway:${BUILD_NUMBER} > /dev/null
                     docker image inspect discovery:${BUILD_NUMBER} > /dev/null
                     docker image inspect frontend:${BUILD_NUMBER} > /dev/null
@@ -319,6 +346,7 @@ pipeline {
                     echo "product-service:${BUILD_NUMBER}"
                     echo "user-service:${BUILD_NUMBER}"
                     echo "media-service:${BUILD_NUMBER}"
+                    echo "order-service:${BUILD_NUMBER}"
                     echo "gateway:${BUILD_NUMBER}"
                     echo "discovery:${BUILD_NUMBER}"
                     echo "frontend:${BUILD_NUMBER}"
@@ -490,6 +518,7 @@ pipeline {
                             check_container product-mongodb || return 1
                             check_container media-mongodb || return 1
                             check_container user-mongodb || return 1
+                            check_container order-mongodb || return 1
                             # Infrastructure
                             check_container buy01-kafka || return 1
                             check_container buy01-discovery || return 1
@@ -497,6 +526,7 @@ pipeline {
                             check_container buy01-user-service || return 1
                             check_container buy01-product-service || return 1
                             check_container buy01-media-service || return 1
+                            check_container buy01-order-service || return 1
                             check_container buy01-gateway || return 1
                             # Frontend
                             check_container buy01-frontend || return 1
@@ -596,6 +626,7 @@ pipeline {
             product-service:${BUILD_NUMBER}
             user-service:${BUILD_NUMBER}
             media-service:${BUILD_NUMBER}
+            order-service:${BUILD_NUMBER}
             gateway:${BUILD_NUMBER}
             discovery:${BUILD_NUMBER}
             frontend:${BUILD_NUMBER}

@@ -77,6 +77,19 @@ describe('SellerDashboard behaviour', () => {
     expect(c.attachedMedia().length).toBe(1);
   });
 
+  it('preserves categories while editing and supports older products', () => {
+    const m = defaultMocks();
+    const c = build(m.products, m.media);
+    c.editProduct({ ...product, category: 'furniture' });
+    expect(c.productForm.get('category')?.value).toBe('furniture');
+    c.editProduct(product);
+    expect(c.productForm.get('category')?.value).toBe('uncategorized');
+    c.productForm.get('category')?.setValue('   ');
+    expect(c.productForm.get('category')?.invalid).toBe(true);
+    c.productForm.get('category')?.setValue('a'.repeat(81));
+    expect(c.productForm.get('category')?.invalid).toBe(true);
+  });
+
   it('rejects non-image uploads', () => {
     const m = defaultMocks();
     const c = build(m.products, m.media);
@@ -96,7 +109,7 @@ describe('SellerDashboard behaviour', () => {
     const m = defaultMocks();
     const c = build(m.products, m.media);
     c.openCreateForm();
-    c.productForm.setValue({ name: 'New', price: 1, quantity: 1, description: 'Description' });
+    c.productForm.setValue({ name: 'New', price: 1, quantity: 1, description: 'Description', category: 'furniture' });
     await c.saveProduct();
     expect(c.productForm.valid).toBe(true);
     expect(c.statusMessage()).toContain('image is required');
@@ -107,7 +120,7 @@ describe('SellerDashboard behaviour', () => {
     const m = defaultMocks();
     const c = build(m.products, m.media);
     c.openCreateForm();
-    c.productForm.setValue({ name: 'New', price: 5, quantity: 2, description: 'Description' });
+    c.productForm.setValue({ name: 'New', price: 5, quantity: 2, description: 'Description', category: 'furniture' });
     c.uploadImage({ target: { files: [new File(['x'], 'p.png', { type: 'image/png' })], value: '' } } as unknown as Event);
     await c.saveProduct();
     expect(m.media.uploadImage).toHaveBeenCalledTimes(1);
@@ -128,7 +141,7 @@ describe('SellerDashboard behaviour', () => {
     m.products.createProduct.mockReturnValue(throwError(() => ({ error: { message: 'nope' } })));
     const c = build(m.products, m.media);
     c.openCreateForm();
-    c.productForm.setValue({ name: 'New', price: 5, quantity: 2, description: 'Description' });
+    c.productForm.setValue({ name: 'New', price: 5, quantity: 2, description: 'Description', category: 'furniture' });
     c.uploadImage({ target: { files: [new File(['x'], 'p.png', { type: 'image/png' })], value: '' } } as unknown as Event);
     await c.saveProduct();
     expect(c.statusMessage()).toBe('nope');

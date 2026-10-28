@@ -33,11 +33,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
+        CustomHttpServletRequestWrapper wrappedRequest = new CustomHttpServletRequestWrapper(request);
+        for (String header : List.of("X-User-Id", "X-User-Role", "X-User-Roles")) {
+            wrappedRequest.removeHeader(header);
+        }
         String authHeader = request.getHeader("Authorization");
 
         // No JWT → continue
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
+            filterChain.doFilter(wrappedRequest, response);
             return;
         }
 
@@ -78,8 +82,6 @@ String role = claims.get("role", String.class);
 
         
 
-        CustomHttpServletRequestWrapper wrappedRequest =
-        new CustomHttpServletRequestWrapper(request);
 
                 wrappedRequest.putHeader("X-User-Id", userId);
                 wrappedRequest.putHeader("X-User-Role", role);

@@ -46,14 +46,20 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    void noAuthHeader_continuesChain() throws Exception {
+    void noAuthHeader_stripsSpoofedIdentityAndContinuesChain() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("X-User-Id", "spoofed");
+        request.addHeader("X-User-Roles", "CLIENT");
         MockHttpServletResponse response = new MockHttpServletResponse();
         FilterChain chain = mock(FilterChain.class);
 
         filter.doFilter(request, response, chain);
 
-        verify(chain).doFilter(request, response);
+        var captor = org.mockito.ArgumentCaptor.forClass(jakarta.servlet.ServletRequest.class);
+        verify(chain).doFilter(captor.capture(), org.mockito.ArgumentMatchers.eq(response));
+        var forwarded = (jakarta.servlet.http.HttpServletRequest) captor.getValue();
+        assertThat(forwarded.getHeader("X-User-Id")).isNull();
+        assertThat(forwarded.getHeader("X-User-Roles")).isNull();
     }
 
     @Test
@@ -65,7 +71,11 @@ class JwtAuthenticationFilterTest {
 
         filter.doFilter(request, response, chain);
 
-        verify(chain).doFilter(request, response);
+        var captor = org.mockito.ArgumentCaptor.forClass(jakarta.servlet.ServletRequest.class);
+        verify(chain).doFilter(captor.capture(), org.mockito.ArgumentMatchers.eq(response));
+        var forwarded = (jakarta.servlet.http.HttpServletRequest) captor.getValue();
+        assertThat(forwarded.getHeader("X-User-Id")).isNull();
+        assertThat(forwarded.getHeader("X-User-Roles")).isNull();
     }
 
     @Test
@@ -85,6 +95,8 @@ class JwtAuthenticationFilterTest {
     void validToken_setsContextAndForwardsHeaders() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Authorization", "Bearer " + tokenFor("user-9", "SELLER"));
+        request.addHeader("x-user-id", "victim");
+        request.addHeader("x-user-roles", "CLIENT");
         MockHttpServletResponse response = new MockHttpServletResponse();
         FilterChain chain = mock(FilterChain.class);
 

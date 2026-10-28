@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scan six projects; save reviewable metrics even when a gate fails.
+"""Scan all provisioned projects; save reviewable metrics even when a gate fails.
 
 --initialize is only for a fresh, disposable CI SonarQube server. Without it,
 use SONAR_TOKEN to analyze against an existing server (local validation).
@@ -56,6 +56,31 @@ def initialize(host):
     basic_call('users/change_password', {'login': 'admin', 'previousPassword': 'admin',
                                         'password': password}, 'admin')
     return basic_call('user_tokens/generate', {'name': 'ci-bootstrap'}, password)['token']
+
+
+def failure_details(result):
+    """Render actionable gate failures without exposing API responses or tokens."""
+    gate = result.get('quality_gate', {})
+    lines = []
+    for condition in gate.get('conditions', []):
+        if condition.get('status') == 'ERROR':
+            lines.append('- `{}`: actual **{}**, fails when {} **{}**.'.format(
+                condition['metricKey'], condition.get('actualValue', 'n/a'),
+                condition.get('comparator', '?'), condition.get('errorThreshold', 'n/a')))
+    if result['scanner_exit_code']:
+        lines.append('- Scanner exit code: {}.'.format(result['scanner_exit_code']))
+    if gate.get('status') != 'OK' or result['scanner_exit_code']:
+        for issue in result.get('issues', {}).get('issues', []):
+            location = issue.get('component', 'unknown')
+            if issue.get('line') is not None:
+                location += ':' + str(issue['line'])
+            message = issue.get('message', '').replace('\n', ' ').replace('\r', ' ')
+            lines.append('- `{}` `{}`: {}'.format(location, issue.get('rule', 'unknown'), message))
+    if result.get('error'):
+        lines.append('- ' + result['error'])
+    if not lines and gate.get('status') != 'OK':
+        lines.append('- No failed conditions returned; inspect the project JSON report and scanner log.')
+    return lines
 
 
 def main():
@@ -122,6 +147,10 @@ def main():
         summary.append('| {} | {} | {}% | {}% |'.format(result['project'],
             result.get('quality_gate', {}).get('status', 'ERROR'),
             metrics.get('coverage', 'n/a'), metrics.get('duplicated_lines_density', 'n/a')))
+    for result in results:
+        details = failure_details(result)
+        if details:
+            summary.extend(['', '## ' + result['project'], '', *details])
     summary.extend(['', 'Scanner or gate failures: ' + (', '.join(failed) or 'none')])
     text = '\n'.join(summary) + '\n'
     (report / 'summary.md').write_text(text)

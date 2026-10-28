@@ -143,13 +143,14 @@ docker compose -f jenkins-lab/compose.yml --profile bootstrap run --rm sonar-ini
 
 Successful output should end with `Provisioning complete; recreate Jenkins to load secret files`.
 
-The bootstrap prepares **six SonarQube projects**, their analysis tokens, and the internal Jenkins quality-gate webhook:
+The bootstrap prepares **seven SonarQube projects**, their analysis tokens, and the internal Jenkins quality-gate webhook:
 
 | Component | SonarQube project key | Jenkins credential ID |
 | --- | --- | --- |
 | Product Service | `buy01-product-service` | `sonar-product-token` |
 | User Service | `buy01-user-service` | `sonar-user-token` |
 | Media Service | `buy01-media-service` | `sonar-media-token` |
+| Order Service (Cart & Checkout) | `buy01-order-service` | `sonar-order-token` |
 | API Gateway | `buy01-gateway` | `sonar-gateway-token` |
 | Eureka Discovery | `buy01-discovery` | `sonar-discovery-token` |
 | Angular frontend | `buy01-frontend` | `sonar-frontend-token` |
@@ -166,7 +167,7 @@ docker compose -f jenkins-lab/compose.yml ps
 Open **http://localhost:8085**, sign in as `admin` using the password from step 1, and verify:
 
 - **Manage Jenkins → System → SonarQube installations** shows `SonarQube` at `http://sonarqube:9000`.
-- **Manage Jenkins → Credentials** contains the six SonarQube credential IDs.
+- **Manage Jenkins → Credentials** contains the seven SonarQube credential IDs.
 - The `first-pipeline` job exists.
 
 **Important JCasC check:** Having SonarQube settings inside `/casc/jenkins.yaml` does **not** prove Jenkins applied them. In **Manage Jenkins → Configuration as Code**, check the **last applied configuration path** and verify that the server installation is actually visible. If Jenkins applies `/tmp/jenkins-base.yaml` without the Sonar section, investigate the startup/JCasC generation path instead of manually adding the server or clearing Docker volumes.
@@ -180,7 +181,7 @@ The expected sequence is:
 1. Checkout from GitHub.
 2. Run backend tests, package JARs, and generate JaCoCo coverage.
 3. Run Angular tests, generate LCOV coverage, and build the frontend.
-4. Analyze all six projects in SonarQube and wait for their quality gates.
+4. Analyze all seven projects in SonarQube and wait for their quality gates.
 5. Only if all gates pass, build Docker images tagged with the Jenkins build number.
 6. Deploy the application, check health, and attempt rollback when an eligible previous release exists and deployment health fails.
 
@@ -277,6 +278,35 @@ For a full failure, inspect the **first real error** in Jenkins Console Output, 
 ## Quality checks and reviews
 
 See [.ci/README.md](.ci/README.md) for automatic scans, retained reports, required reviews, and the prepared GitHub branch-protection rule. Protected branches still require a qualifying GitHub plan for this private repository.
+
+## Product categories
+
+Product create/update requests accept an optional `category` string of at most 80 characters. Categories are trimmed and stored in lowercase (for example, `" Furniture "` becomes `"furniture"`). New products without a category, and existing uncategorized products in API responses, use `"uncategorized"`. An update that omits `category` preserves the existing value. Existing MongoDB documents do not require a migration for this change.
+
+Sellers can edit the category in the product form. Category filtering is supported by the product search endpoint below.
+
+## Product search API
+
+`GET /api/products/search` is a public, read-only endpoint. The existing product list and product-by-ID endpoints retain their response formats for cart/order compatibility.
+
+Example:
+
+```http
+GET /api/products/search?q=phone&category=electronics&minPrice=500&maxPrice=3000&inStock=true&sort=price-asc&page=0&size=12
+```
+
+| Parameter | Behavior |
+| --- | --- |
+| `q` | Optional keywords in name/description, up to 200 characters. MongoDB text search matches words, not arbitrary substrings. The text index uses language `none` (no stemming or stop-word removal). Multiple terms use MongoDB text-search semantics, including OR by default. |
+| `category` | Optional exact category, trimmed and lowercased. `uncategorized` includes legacy missing/blank values. |
+| `minPrice`, `maxPrice` | Optional inclusive bounds, nonnegative with up to 12 integer digits and 2 decimal places. Minimum must not exceed maximum. |
+| `inStock` | `true` limits results to positive stock; omitted/`false` includes all stock levels. |
+| `sort` | `newest` (default), `featured` (alias for newest), `price-asc`, `price-desc`, or `name-asc`. All include an ID tie-breaker. Name sorting uses MongoDB's default binary ordering. |
+| `page`, `size` | Zero-based page (0–10000, default 0), page size (1–100, default 12). |
+
+The response contains `content` (product responses), `totalElements`, `totalPages`, `page`, and `size`. Counts apply to all matches before pagination. No matches produce an empty list and zero total pages; a page beyond the last page is empty and retains the matching totals. Invalid filters return HTTP 400 using the existing validation error response.
+
+Spring Data creates the combined name/description text index and category/price, price, and creation-date indexes on startup when `spring.data.mongodb.auto-index-creation=true` (already configured). MongoDB must be available and its application user must have permission to create indexes. These indexes support the basic search paths; query plans for combined filters/sorts should be checked against representative data. The Angular catalog uses this endpoint for search, category/price/stock filters, sorting, and pagination (12, 24, or 48 items per page). Filter changes reset the page and wait 300 ms before searching; newer changes cancel pending or in-flight requests. Invalid price ranges are shown inline and do not send requests. The existing quick view and add-to-cart actions remain available.
 
 ## Project status
 

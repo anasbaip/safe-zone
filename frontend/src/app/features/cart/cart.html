@@ -1,0 +1,30 @@
+<main class="container-xl py-4">
+  <h1>Shopping cart</h1>
+  <output *ngIf="busy()" class="d-block mb-3">Updating cart…</output>
+  <div *ngIf="error()" class="alert alert-danger" role="alert">{{ error() }}
+    <button class="btn btn-outline-secondary ms-2" (click)="load()" [disabled]="busy()">Reload cart</button>
+  </div>
+  <ng-container *ngIf="data() as cart">
+    <p *ngIf="!cart.items.length">Your cart is empty. <a routerLink="/products">Browse products</a></p>
+    <p *ngIf="cart.checkoutPending" class="alert alert-warning">Order confirmation is pending. Continue checkout to retry safely.</p>
+    <article *ngFor="let item of cart.items" class="buy-card p-3 mb-3">
+      <div class="row g-3 align-items-center">
+        <div class="col-auto" *ngIf="item.image"><img [src]="item.image" [alt]="item.name" width="72" height="72" style="object-fit:cover"></div>
+        <div class="col"><h2 class="h5">{{ item.name }}</h2><p class="mb-0">{{ item.unitPrice | currency:'USD' }} each</p>
+          <p *ngIf="!item.available" class="text-danger mb-0">Unavailable in the requested quantity ({{ item.availableQuantity }} in stock).</p></div>
+        <div class="col-12 col-sm-auto d-flex align-items-center gap-2">
+          <button class="btn btn-outline-secondary" [disabled]="busy() || cart.checkoutPending || item.quantity <= 1" (click)="update(item.productId, '' + (item.quantity - 1))" [attr.aria-label]="'Decrease quantity of ' + item.name">−</button>
+          <label class="small">Quantity <input #quantity type="number" class="form-control" style="width:5rem" min="1" max="100" step="1" [value]="item.quantity" [disabled]="busy() || cart.checkoutPending" (change)="update(item.productId, quantity.value)" [attr.aria-label]="'Quantity of ' + item.name"></label>
+          <button class="btn btn-outline-secondary" [disabled]="busy() || cart.checkoutPending || item.quantity >= 100 || item.quantity >= item.availableQuantity" (click)="update(item.productId, '' + (item.quantity + 1))" [attr.aria-label]="'Increase quantity of ' + item.name">+</button>
+          <button class="btn btn-outline-danger" [disabled]="busy() || cart.checkoutPending" (click)="remove(item.productId)">Remove</button>
+        </div>
+        <div class="col-12 col-sm-auto fw-semibold">{{ item.lineTotal | currency:'USD' }}</div>
+      </div>
+    </article>
+    <div *ngIf="cart.items.length" class="buy-card p-4 d-flex flex-wrap gap-3 justify-content-between align-items-center">
+      <strong>Total: {{ cart.totalAmount | currency:'USD' }}</strong>
+      <button class="btn btn-outline-danger" (click)="clear()" [disabled]="busy() || cart.checkoutPending">Clear cart</button>
+      <a class="btn btn-primary" routerLink="/checkout" *ngIf="cart.checkoutPending || canCheckout()">{{ cart.checkoutPending ? 'Resume checkout' : 'Proceed to checkout' }}</a>
+    </div>
+  </ng-container>
+</main>

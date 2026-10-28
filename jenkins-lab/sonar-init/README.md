@@ -32,8 +32,27 @@ Bootstrap enumerates projects with pagination, preserves existing project key sp
 
 API failures display only structured error messages with credentials redacted. HTTP 400 is never treated as generic success: a second inventory must find the intended project before bootstrap recovers from a concurrent creation.
 
-Jenkins starts with six secret-text credentials and six exact project keys after bootstrap. If any credential/key file is missing, the entrypoint omits the Sonar configuration while allowing administrator access for recovery; analysis fails safely. A recreation is needed to load repaired files into the entrypoint environment and JCasC.
+Jenkins starts with seven secret-text credentials and seven exact project keys after bootstrap. If any credential/key file is missing, the entrypoint omits the Sonar configuration while allowing administrator access for recovery; analysis fails safely. A recreation is needed to load repaired files into the entrypoint environment and JCasC.
 
-The pipeline runs frontend and backend tests before packaging, verifies JaCoCo XML and frontend LCOV reports, and performs each of the six analyses followed immediately by its Quality Gate. Sequential pairs are required by the Jenkins Sonar plugin. Image builds and deployment follow only after all six gates pass. Gate failure reporting uses that scanner's CE task and analysis ID to print failed metrics without overriding the original failure. Deployment and rollback logic remain intact.
+The pipeline runs frontend and backend tests before packaging, verifies JaCoCo XML and frontend LCOV reports, and performs each of the seven analyses followed immediately by its Quality Gate. Sequential pairs are required by the Jenkins Sonar plugin. Image builds and deployment follow only after all seven gates pass. Gate failure reporting uses that scanner's CE task and analysis ID to print failed metrics without overriding the original failure. Deployment and rollback logic remain intact.
 
 The `first-pipeline` job loads `Jenkinsfile` from GitHub `main`. Local Jenkinsfile/helper changes must be made available in that SCM revision before **Build Now** uses them; this repair does not commit or push. Full pipeline testing requires real credentials and that updated SCM revision.
+
+OrderService (including Cart and Checkout) is provisioned as `buy01-order-service`.
+Its files are `sonar-order-token` and `sonar-order-project-key`; the entrypoint loads
+`SONAR_ORDER_TOKEN` / `SONAR_ORDER_PROJECT_KEY`, and JCasC defines `sonar-order-token`.
+There is no new secret to hand-create for Order: the existing bootstrap administrator
+User Token provisions its project-scoped analysis token, just like the other six.
+A valid existing project/token is preserved on rerun. Do not delete Jenkins or
+SonarQube volumes when adding this seventh component.
+
+Local tests (no Jenkins controller needed):
+
+```sh
+python3 -m unittest discover -s jenkins-lab/sonar-init -p 'test_*.py'
+python3 -m unittest discover -s .ci -p 'test_*.py'
+```
+
+Entrypoint tests use private fixture files and stub the controller handoff; they
+are not live JCasC schema/plugin validation. `verify-jenkins.js` checks all seven
+credentials and project permissions only when explicitly run inside live Jenkins.

@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -15,8 +16,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.buy01.product_service.dtos.req.CreateProductRequest;
 import com.buy01.product_service.dtos.req.LinkImagesRequest;
+import com.buy01.product_service.dtos.req.ProductSearchRequest;
 import com.buy01.product_service.dtos.req.UpdateProduct;
 import com.buy01.product_service.dtos.response.ProductResponse;
+import com.buy01.product_service.dtos.response.ProductSearchResponse;
 import com.buy01.product_service.security.AuthenticatedUser;
 import com.buy01.product_service.security.CurrentUser;
 import com.buy01.product_service.service.ProductService;
@@ -35,6 +38,11 @@ public class  ProductController {
     @GetMapping
     public ResponseEntity<List<ProductResponse>> getAllProducts() {
         return ResponseEntity.ok(productService.getThemAll());
+    }
+
+    @GetMapping("/search")
+    public ProductSearchResponse search(@Valid @ModelAttribute ProductSearchRequest filters) {
+        return productService.search(filters);
     }
 
     @GetMapping("/{id}")

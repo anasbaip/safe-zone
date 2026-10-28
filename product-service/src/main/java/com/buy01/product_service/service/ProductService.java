@@ -3,6 +3,7 @@ package com.buy01.product_service.service;
 import java.time.Instant;
 import java.util.List;
 import java.util.Arrays;
+import java.util.Locale;
 
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -11,8 +12,10 @@ import com.buy01.product_service.client.MediaServiceClient;
 import com.buy01.product_service.dtos.external.MediaMetadataResponse;
 import com.buy01.product_service.dtos.req.CreateProductRequest;
 import com.buy01.product_service.dtos.req.LinkImagesRequest;
+import com.buy01.product_service.dtos.req.ProductSearchRequest;
 import com.buy01.product_service.dtos.req.UpdateProduct;
 import com.buy01.product_service.dtos.response.ProductResponse;
+import com.buy01.product_service.dtos.response.ProductSearchResponse;
 import com.buy01.product_service.events.ProductCreatedEvent;
 import com.buy01.product_service.events.ProductImagesChangedEvent;
 import com.buy01.product_service.exception.BadRequest;
@@ -20,6 +23,7 @@ import com.buy01.product_service.exception.ResourceNotFoundException;
 import com.buy01.product_service.exception.UnauthorizedException;
 import com.buy01.product_service.models.Product;
 import com.buy01.product_service.repository.ProductRepository;
+import com.buy01.product_service.repository.ProductSearchRepository;
 import com.buy01.product_service.security.AuthenticatedUser;
 
 import lombok.RequiredArgsConstructor;
@@ -33,6 +37,13 @@ public class ProductService {
  private final ProductRepository productRepository;
  private final MediaServiceClient mediaServiceClient;
  private final KafkaTemplate<String, Object> kafkaTemplate;
+ private final ProductSearchRepository productSearchRepository;
+
+ public ProductSearchResponse search(ProductSearchRequest filters) {
+    var result = productSearchRepository.search(filters);
+    return new ProductSearchResponse(result.getContent().stream().map(this::toResponse).toList(),
+            result.getTotalElements(), result.getTotalPages(), result.getNumber(), result.getSize());
+ }
 
 
 
@@ -114,6 +125,7 @@ public ProductResponse newProduct(CreateProductRequest req , AuthenticatedUser u
         Product p = Product.builder()
                 .name(req.name())
                 .description(req.description())
+                .category(normalizeCategory(req.category()))
                 .price(req.price())
                 .quantity(req.quantity())
                 .ownerId(user.userId())
@@ -151,6 +163,9 @@ public ProductResponse updateProduct(String id, UpdateProduct request, Authentic
         List<String> previousMediaIds = mediaIds(product);
         product.setName(request.name());
         product.setDescription(request.description());
+        if (request.category() != null) {
+            product.setCategory(normalizeCategory(request.category()));
+        }
         product.setPrice(request.price());
         product.setImages(resolvedImages.toArray(new String[0]));
         product.setMediaIds(request.mediaIds().toArray(new String[0]));
@@ -187,6 +202,12 @@ public void deleteP(String id , AuthenticatedUser user){
                 .join();
     }
 
+  private static String normalizeCategory(String category) {
+        return category == null || category.isBlank()
+                ? "uncategorized"
+                : category.strip().toLowerCase(Locale.ROOT);
+    }
+
   private ProductResponse toResponse(Product product) {
         return new ProductResponse(
                 product.getId(),
@@ -196,7 +217,8 @@ public void deleteP(String id , AuthenticatedUser user){
                 product.getOwnerId(),
                 product.getImages(),
                 product.getMediaIds(),
-                product.getQuantity());
+                product.getQuantity(),
+                normalizeCategory(product.getCategory()));
     }
  
 }

@@ -51,7 +51,7 @@ def request={ endpoint, token ->
     con.disconnect()
     [status,body]
 }
-['product','user','media','gateway','discovery','frontend'].each { c ->
+['product','user','media','order','gateway','discovery','frontend'].each { c ->
     def credential=cs.find{it.id=='sonar-'+c+'-token'}
     def key=props['SONAR_'+c.toUpperCase()+'_PROJECT_KEY']
     def expected=System.getenv('SONAR_'+c.toUpperCase()+'_TOKEN')

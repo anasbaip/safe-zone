@@ -1,0 +1,43 @@
+<main class="container py-4" style="max-width:850px">
+  <h1>Pay on Delivery checkout</h1>
+  <p class="text-muted" aria-label="Checkout progress">Delivery address → Review → Confirmation</p>
+  <output *ngIf="busy()" class="d-block mb-3">Please wait…</output>
+  <div *ngIf="error()" class="alert alert-danger" role="alert">{{ error() }}</div>
+  <a routerLink="/cart" *ngIf="step() !== 'done'">Back to cart</a>
+  <p *ngIf="cart() && !cart()!.items.length && step() !== 'done'">Your cart is empty.</p>
+  <form *ngIf="step() === 'address' && cart()?.items?.length" #delivery="ngForm" (ngSubmit)="review(delivery)" class="buy-card p-4 mt-3">
+    <h2 class="h4">Delivery address</h2>
+    <div class="row g-3">
+      <div class="col-12 col-md-6" *ngFor="let field of fields">
+        <label [for]="field.name" class="form-label">{{ field.label }}</label>
+        <input [id]="field.name" [name]="field.name" [type]="field.name === 'phone' ? 'tel' : 'text'" class="form-control" required pattern=".*\S.*" [maxlength]="field.max" [autocomplete]="field.autocomplete" [(ngModel)]="address[field.name]" #control="ngModel" [disabled]="busy()" [attr.aria-invalid]="control.invalid && control.touched">
+        <small *ngIf="control.invalid && control.touched" class="text-danger">Enter {{ field.label.toLowerCase() }}.</small>
+      </div>
+    </div>
+    <p class="mt-3">Payment: Pay on Delivery. Pay when your order arrives.</p>
+    <button class="btn btn-primary" [disabled]="busy() || delivery.invalid">Review order</button>
+  </form>
+  <section *ngIf="step() === 'review' && cart() as data" class="buy-card p-4 mt-3">
+    <h2 class="h4">Review your order</h2>
+    <address>{{ address.fullName }} · {{ address.phone }}<br>{{ address.street }}<br>{{ address.city }}, {{ address.postalCode }}, {{ address.country }}</address>
+    <div *ngFor="let item of data.items" class="d-flex flex-wrap justify-content-between gap-2 border-bottom py-2">
+      <span>{{ item.name }} × {{ item.quantity }}</span><span>{{ item.lineTotal | currency:'USD' }}</span>
+    </div>
+    <p class="mt-3 fw-bold">Total: {{ data.totalAmount | currency:'USD' }}</p>
+    <p>Payment: Pay on Delivery</p>
+    <p *ngIf="pending()" class="alert alert-warning">Confirmation is pending. Retry safely using this same checkout.</p>
+    <div class="d-flex flex-wrap gap-2">
+      <button class="btn btn-secondary" (click)="edit()" [disabled]="busy() || pending()">Edit delivery address</button>
+      <button class="btn btn-primary" (click)="confirm()" [disabled]="busy()">{{ pending() ? 'Retry confirmation' : 'Confirm Pay on Delivery' }}</button>
+    </div>
+  </section>
+  <section *ngIf="step() === 'done' && order() as result" class="buy-card p-4 mt-3">
+    <h2 class="h4">Order confirmed</h2>
+    <output class="d-block">
+      <span class="d-block mb-3">Order reference: {{ result.id }}</span>
+      <span class="d-block mb-3">Pay {{ result.totalAmount | currency:'USD' }} on delivery.</span>
+    </output>
+    <a routerLink="/products">Continue shopping</a>
+  </section>
+  <button *ngIf="!cart() && !busy()" class="btn btn-secondary mt-3" (click)="load()">Retry loading checkout</button>
+</main>

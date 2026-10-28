@@ -31,6 +31,8 @@ export const routes: Routes = [
     loadComponent: () => import('./features/seller/media-manager/media-manager').then(m => m.MediaManager),
     canActivate: [authGuard, roleGuard('SELLER')]
   },
+  { path: 'cart', loadComponent: () => import('./features/cart/cart').then(m => m.Cart), canActivate: [authGuard, roleGuard('CLIENT')] },
+  { path: 'checkout', loadComponent: () => import('./features/checkout/checkout').then(m => m.Checkout), canActivate: [authGuard, roleGuard('CLIENT')] },
   {
     path: '**',
     loadComponent: () => import('./features/error/not-found/not-found').then(m => m.NotFound)

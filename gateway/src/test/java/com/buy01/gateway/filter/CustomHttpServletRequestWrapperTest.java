@@ -53,4 +53,18 @@ class CustomHttpServletRequestWrapperTest {
         assertThat(Collections.list(wrapper.getHeaderNames()))
                 .contains("Original", "X-User-Id");
     }
+    @Test
+    void removedIdentityIsAbsentFromEveryHeaderAccessPathRegardlessOfCase() {
+        var original = new MockHttpServletRequest();
+        original.addHeader("x-user-id", "victim");
+        original.addHeader("X-User-Roles", "CLIENT");
+        var wrapper = new CustomHttpServletRequestWrapper(original);
+        wrapper.removeHeader("X-User-Id"); wrapper.removeHeader("X-User-Roles");
+        assertThat(wrapper.getHeader("x-USER-id")).isNull();
+        assertThat(Collections.list(wrapper.getHeaders("x-user-id"))).isEmpty();
+        assertThat(Collections.list(wrapper.getHeaderNames())).doesNotContain("x-user-id", "X-User-Roles");
+        wrapper.putHeader("X-User-Id", "authenticated");
+        assertThat(wrapper.getHeader("x-user-id")).isEqualTo("authenticated");
+        assertThat(Collections.list(wrapper.getHeaders("x-user-id"))).containsExactly("authenticated");
+    }
 }

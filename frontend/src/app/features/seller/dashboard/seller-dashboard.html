@@ -155,6 +155,16 @@
             </div>
           </div>
 
+          <div class="col-12">
+            <label class="form-label" for="prodCategory">Category <span class="text-danger">*</span></label>
+            <input id="prodCategory" type="text" class="form-control" formControlName="category"
+              maxlength="80" placeholder="e.g. furniture" aria-describedby="categoryError">
+            <div id="categoryError" class="text-danger small mt-1"
+              *ngIf="productForm.get('category')?.touched && productForm.get('category')?.invalid">
+              Enter a category with 1 to 80 characters.
+            </div>
+          </div>
+
           <!-- Description -->
           <div class="col-12">
             <label class="form-label" for="prodDesc">Product description <span class="text-danger">*</span></label>
@@ -289,6 +299,7 @@
             <!-- Details -->
             <td>
               <div class="fw-semibold">{{ p.name }}</div>
+              <div class="small text-muted">{{ p.category || 'uncategorized' }}</div>
               <div class="text-muted small text-truncate" style="max-width: 340px;">
                 {{ p.description || 'No description provided' }}
               </div>

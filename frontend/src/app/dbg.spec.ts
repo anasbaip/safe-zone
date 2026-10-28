@@ -8,7 +8,7 @@ describe('dbg', () => {
     const media:any={MAX_FILE_SIZE:2097152,uploadImage:()=>of({id:'n',url:'u'})};
     const c=new SellerDashboard(new FormBuilder(),products,media);
     c.openCreateForm();
-    c.productForm.setValue({name:'New',price:5,quantity:2,description:'desc'});
+    c.productForm.setValue({name:'New',price:5,quantity:2,description:'desc',category:'furniture'});
     console.log('valid?', c.productForm.valid, c.productForm.value, JSON.stringify(c.productForm.errors));
   });
 });

@@ -11,15 +11,15 @@
       </div>
       <div class="col-lg-3 text-lg-end mt-3 mt-lg-0">
         <div class="atelier-count-block">
-          <span class="atelier-count-number">{{ products().length }}</span>
-          <span class="atelier-count-label">Active listings</span>
+          <span class="atelier-count-number">{{ loading() ? '…' : totalElements() }}</span>
+          <span class="atelier-count-label">Matching listings</span>
         </div>
       </div>
     </div>
   </header>
 
   <!-- Search & Filter Toolbar -->
-  <div class="atelier-toolbar mb-4 p-3 buy-card">
+  <form class="atelier-toolbar mb-4 p-3 buy-card" [formGroup]="filters" (ngSubmit)="applyFilters()">
     <div class="row g-3 align-items-center">
       <!-- Search Input -->
       <div class="col-md-5 col-lg-6">
@@ -34,15 +34,14 @@
             type="search" 
             class="form-control border-start-0 ps-0" 
             placeholder="Search listings by title or craft description..." 
-            [ngModel]="searchQuery()" 
-            (ngModelChange)="searchQuery.set($event)"
+            formControlName="q" maxlength="200"
             aria-label="Search products">
           <button 
-            *ngIf="searchQuery()" 
+            *ngIf="filters.controls.q.value"
             class="btn btn-outline-secondary border-start-0" 
             type="button" 
-            (click)="searchQuery.set('')"
-            title="Clear search">
+            (click)="filters.controls.q.setValue('')"
+            title="Clear search" aria-label="Clear search">
             ✕
           </button>
         </div>
@@ -55,9 +54,8 @@
           <select 
             id="sortSelect" 
             class="form-select form-select-sm" 
-            [ngModel]="sortBy()" 
-            (ngModelChange)="sortBy.set($event)">
-            <option value="featured">Featured selection</option>
+            formControlName="sort">
+            <option value="newest">Newest first</option>
             <option value="price-asc">Price: low to high</option>
             <option value="price-desc">Price: high to low</option>
             <option value="name-asc">Title: a to z</option>
@@ -70,11 +68,10 @@
         <select 
           class="form-select form-select-sm" 
           style="max-width: 140px;"
-          [ngModel]="filterStock()" 
-          (ngModelChange)="filterStock.set($event)"
+          formControlName="inStock"
           aria-label="Filter inventory availability">
-          <option value="all">All listings</option>
-          <option value="in-stock">In stock only</option>
+          <option [ngValue]="false">All listings</option>
+          <option [ngValue]="true">In stock only</option>
         </select>
 
         <fieldset class="btn-group btn-group-sm"  aria-label="Layout view switcher">
@@ -114,21 +111,57 @@
       </div>
     </div>
 
+    <div class="row g-3 mt-1">
+      <div class="col-sm-6 col-lg-4">
+        <label for="categoryFilter" class="form-label small">Category</label>
+        <input id="categoryFilter" type="text" class="form-control form-control-sm"
+          formControlName="category" maxlength="80" placeholder="e.g. furniture">
+      </div>
+      <div class="col-6 col-lg-3">
+        <label for="minPriceFilter" class="form-label small">Minimum price ($)</label>
+        <input id="minPriceFilter" type="number" min="0" step="0.01" max="999999999999.99"
+          class="form-control form-control-sm" formControlName="minPrice" aria-describedby="priceFilterError">
+      </div>
+      <div class="col-6 col-lg-3">
+        <label for="maxPriceFilter" class="form-label small">Maximum price ($)</label>
+        <input id="maxPriceFilter" type="number" min="0" step="0.01" max="999999999999.99"
+          class="form-control form-control-sm" formControlName="maxPrice" aria-describedby="priceFilterError">
+      </div>
+      <div class="col-sm-6 col-lg-2">
+        <label for="pageSize" class="form-label small">Items per page</label>
+        <select id="pageSize" class="form-select form-select-sm" formControlName="size">
+          <option [ngValue]="12">12</option>
+          <option [ngValue]="24">24</option>
+          <option [ngValue]="48">48</option>
+        </select>
+      </div>
+    </div>
+    <p id="priceFilterError" class="text-danger small mt-2 mb-0" role="alert"
+      *ngIf="filters.controls.minPrice.invalid || filters.controls.maxPrice.invalid || filters.hasError('priceRange')">
+      Enter nonnegative prices with at most 12 integer digits and 2 decimal places. Minimum must not exceed maximum.
+    </p>
+    <p class="text-danger small mt-2 mb-0" role="alert"
+      *ngIf="filters.controls.q.invalid || filters.controls.category.invalid">
+      Search supports up to 200 characters and category supports up to 80 characters.
+    </p>
+    <div class="mt-3"><button type="submit" class="btn btn-primary btn-sm" [disabled]="filters.invalid">Search</button></div>
+
     <!-- Active Filter Feedback Row -->
     <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top small text-muted">
-      <span>
-        Showing <strong class="text-primary">{{ filteredProducts().length }}</strong> of {{ products().length }} catalog items
+      <span aria-live="polite">
+        Showing <strong class="text-primary">{{ products().length }}</strong> of {{ totalElements() }} matching items
       </span>
       <button 
-        *ngIf="searchQuery() || filterStock() !== 'all' || sortBy() !== 'featured'" 
-        class="btn btn-link btn-sm p-0 text-muted" 
+        *ngIf="hasFilters()"
+        type="button" class="btn btn-link btn-sm p-0 text-muted"
         (click)="clearSearch()">
         Reset all filters
       </button>
     </div>
-  </div>
+  </form>
 
   <!-- Loading State -->
+  <output *ngIf="loading()" class="visually-hidden">Loading products…</output>
   <div *ngIf="loading()" class="atelier-gallery-grid mb-4">
     <div class="atelier-grid-tile" *ngFor="let placeholder of [1, 2, 3, 4, 5, 6]">
       <div class="buy-card p-0 h-100 overflow-hidden">
@@ -149,15 +182,15 @@
   </div>
 
   <!-- Empty Results State -->
-  <div *ngIf="!loading() && !loadError() && filteredProducts().length === 0" class="p-5 text-center my-4 buy-card">
+  <div *ngIf="!loading() && !loadError() && filters.valid && products().length === 0" class="p-5 text-center my-4 buy-card">
     <h2 class="h5 mb-2">No matching pieces found</h2>
-    <p class="text-muted mb-4" *ngIf="searchQuery()">
-      No pieces matched "{{ searchQuery() }}". Try adjusting your search query or reset the inventory filter.
+    <p class="text-muted mb-4" *ngIf="filters.controls.q.value">
+      No pieces matched "{{ filters.controls.q.value }}". Try adjusting your search or filters.
     </p>
-    <p class="text-muted mb-4" *ngIf="!searchQuery() && products().length === 0">
-      There are currently no items published in this exhibition.
+    <p class="text-muted mb-4" *ngIf="!filters.controls.q.value">
+      No products match these filters. Try another category or price range.
     </p>
-    <button class="btn btn-secondary btn-sm" (click)="clearSearch()" *ngIf="searchQuery() || filterStock() !== 'all'">
+    <button class="btn btn-secondary btn-sm" (click)="clearSearch()" *ngIf="hasFilters()">
       Clear filters
     </button>
   </div>
@@ -165,11 +198,11 @@
   <!-- Data View: ASYMMETRIC GALLERY-WALL GRID -->
   <div 
     class="atelier-gallery-grid" 
-    *ngIf="!loading() && !loadError() && filteredProducts().length > 0 && viewMode() === 'grid'">
+    *ngIf="!loading() && !loadError() && filters.valid && products().length > 0 && viewMode() === 'grid'">
     
     <div 
       class="atelier-grid-tile" 
-      *ngFor="let p of filteredProducts(); let i = index"
+      *ngFor="let p of products(); let i = index"
       [class.tile-feature]="i % 7 === 0"
       [class.tile-medium]="i % 7 === 1 || i % 7 === 5"
       [class.tile-compact]="i % 7 >= 2 && i % 7 <= 4">
@@ -214,6 +247,7 @@
             <span class="atelier-price text-nowrap">${{ p.price | number:'1.2-2' }}</span>
           </div>
           
+          <span class="small text-muted mb-2">{{ p.category || 'uncategorized' }}</span>
           <p class="product-desc small text-muted mb-3 flex-grow-1">
             {{ p.description || 'Crafted piece catalog item.' }}
           </p>
@@ -229,6 +263,7 @@
               [attr.aria-label]="'Quick view ' + p.name">
               Inspect piece
             </button>
+            <button class="btn btn-primary btn-sm ms-2" (click)="addToOrder(p)" [disabled]="p.quantity <= 0 || adding() || (auth.isLoggedIn() && !auth.hasRole('CLIENT'))">Add to cart</button>
           </div>
         </div>
       </article>
@@ -238,9 +273,9 @@
   <!-- Data View: LIST MODE (Index View) -->
   <div 
     class="d-flex flex-column gap-3" 
-    *ngIf="!loading() && !loadError() && filteredProducts().length > 0 && viewMode() === 'list'">
+    *ngIf="!loading() && !loadError() && filters.valid && products().length > 0 && viewMode() === 'list'">
     
-    <div class="buy-card buy-card-hover p-3" *ngFor="let p of filteredProducts()">
+    <div class="buy-card buy-card-hover p-3" *ngFor="let p of products()">
       <div class="row align-items-center g-3">
         <div class="col-auto">
           <div class="product-list-thumb position-relative overflow-hidden">
@@ -279,10 +314,20 @@
           <button class="btn btn-outline-secondary btn-sm" (click)="openQuickView(p)">
             Inspect piece
           </button>
+          <button class="btn btn-primary btn-sm ms-2" (click)="addToOrder(p)" [disabled]="p.quantity <= 0 || adding() || (auth.isLoggedIn() && !auth.hasRole('CLIENT'))">Add to cart</button>
         </div>
       </div>
     </div>
   </div>
+
+  <nav *ngIf="!loading() && !loadError() && filters.valid && totalPages() > 1"
+    class="d-flex flex-wrap justify-content-center align-items-center gap-3 mt-4" aria-label="Product pages">
+    <button type="button" class="btn btn-outline-secondary btn-sm"
+      [disabled]="page() === 0" (click)="changePage(page() - 1)">Previous</button>
+    <span class="small" aria-live="polite">Page {{ page() + 1 }} of {{ totalPages() }}</span>
+    <button type="button" class="btn btn-outline-secondary btn-sm"
+      [disabled]="page() + 1 >= totalPages() || page() >= 10000" (click)="changePage(page() + 1)">Next</button>
+  </nav>
 
   <!-- INTERACTIVE QUICK VIEW MODAL -->
   <dialog
@@ -369,8 +414,8 @@
             <button 
               class="btn btn-primary flex-grow-1" 
               (click)="addToOrder(item)"
-              [disabled]="item.quantity === 0">
-              Reserve piece
+              [disabled]="item.quantity <= 0 || adding() || (auth.isLoggedIn() && !auth.hasRole('CLIENT'))">
+              Add to cart
             </button>
             <button class="btn btn-secondary" (click)="closeQuickView()">
               Close
@@ -383,8 +428,8 @@
 
   <!-- Toast Notification Container -->
   <div class="buy-toast-container" *ngIf="toastMessage()">
-    <div class="buy-toast">
+    <output class="buy-toast" aria-live="polite">
       <span>{{ toastMessage() }}</span>
-    </div>
+    </output>
   </div>
 </div>

@@ -31,7 +31,7 @@ class ProductControllerTest {
 
     private final AuthenticatedUser user = new AuthenticatedUser("owner", List.of("SELLER"));
     private final ProductResponse response = new ProductResponse("p1", "n", "d", 5.0, "owner",
-            new String[]{"u"}, new String[]{"m"}, 1);
+            new String[]{"u"}, new String[]{"m"}, 1, null);
 
     @Test
     void getAllProducts_returnsOk() {
@@ -56,7 +56,7 @@ class ProductControllerTest {
 
     @Test
     void createProduct_returnsCreated() {
-        var request = new CreateProductRequest("n", "d", 5.0, 1, List.of("m"));
+        var request = new CreateProductRequest("n", "d", 5.0, 1, List.of("m"), null);
         when(productService.newProduct(request, user)).thenReturn(response);
 
         assertThat(controller.createProduct(request, user).getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -64,7 +64,7 @@ class ProductControllerTest {
 
     @Test
     void updateProduct_returnsOk() {
-        var request = new UpdateProduct("n", "d", 5.0, 1, List.of("m"));
+        var request = new UpdateProduct("n", "d", 5.0, 1, List.of("m"), null);
         when(productService.updateProduct("p1", request, user)).thenReturn(response);
 
         assertThat(controller.updateProduct("p1", request, user).getStatusCode()).isEqualTo(HttpStatus.OK);
