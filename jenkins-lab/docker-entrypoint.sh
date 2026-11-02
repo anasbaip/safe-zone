@@ -11,7 +11,7 @@ export GATEWAY_CRT_B64="$(base64 -w 0 /run/secrets/gateway-keystore.crt)"
 export GATEWAY_KEY_B64="$(base64 -w 0 /run/secrets/gateway-keystore.key)"
 
 sonar_ready=true
-for component in product user media gateway discovery frontend; do
+for component in product user media order gateway discovery frontend; do
     file="/run/secrets/sonar-${component}-token"
     if [ ! -s "$file" ]; then
         echo "Missing $file: run sonar-init and recreate Jenkins to enable analysis" >&2

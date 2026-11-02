@@ -1,0 +1,130 @@
+<main class="container-xl py-4">
+  <a [routerLink]="backLink">← Back to orders</a>
+
+  <output *ngIf="busy() && !order()" class="d-block my-3">Loading order…</output>
+  <div *ngIf="error()" class="alert alert-danger mt-3" role="alert">
+    {{ error() }}
+    <button *ngIf="!order()" class="btn btn-outline-secondary ms-2" (click)="load()" [disabled]="busy()">Retry</button>
+  </div>
+
+  <ng-container *ngIf="order() as o">
+    <header class="d-flex flex-wrap justify-content-between align-items-start gap-2 mt-3 mb-4">
+      <div>
+        <h1 class="mb-1">Order #{{ shortId(o.id) }}</h1>
+        <p class="text-muted mb-0">Placed {{ o.createdAt | date: 'medium' }} · Pay on delivery</p>
+      </div>
+      <span [class]="statusBadge(o.status)">{{ statusLabel(o.status) }}</span>
+    </header>
+
+    <section *ngIf="!seller" class="buy-card p-3 mb-4 d-flex flex-wrap align-items-center gap-2" aria-label="Order actions">
+      <ng-container *ngIf="canCancel(o)">
+        <button *ngIf="!confirmingCancel()" class="btn btn-outline-danger" (click)="confirmingCancel.set(true)" [disabled]="busy()">
+          Cancel order
+        </button>
+        <fieldset *ngIf="confirmingCancel()" class="d-flex flex-wrap align-items-center gap-2">
+          <legend class="float-none w-auto fs-6 mb-0">Cancel this order?</legend>
+          <button class="btn btn-danger" (click)="cancel()" [disabled]="busy()">Yes, cancel it</button>
+          <button class="btn btn-outline-secondary" (click)="confirmingCancel.set(false)" [disabled]="busy()">Keep order</button>
+        </fieldset>
+      </ng-container>
+      <button class="btn btn-primary" (click)="reorder()" [disabled]="busy()">Order again</button>
+      <a *ngIf="reordered()" class="btn btn-outline-primary" routerLink="/cart">Go to cart</a>
+      <output *ngIf="busy()" class="ms-auto small">Working…</output>
+    </section>
+
+    <section *ngIf="seller" class="buy-card p-3 mb-4" aria-labelledby="status-title">
+      <h2 id="status-title" class="h5">Update status</h2>
+      <p *ngIf="!nextStatuses(o).length" class="mb-0 text-muted">
+        This order is {{ statusLabel(o.status).toLowerCase() }}; its status can no longer change.
+      </p>
+      <form *ngIf="nextStatuses(o).length" class="row g-3 align-items-end" (ngSubmit)="updateStatus()">
+        <div class="col-12 col-md-3">
+          <label for="next-status" class="form-label">New status</label>
+          <select id="next-status" name="nextStatus" class="form-select" required [(ngModel)]="nextStatus" [disabled]="busy()">
+            <option value="" disabled>Choose…</option>
+            <option *ngFor="let status of nextStatuses(o)" [value]="status">{{ statusLabel(status) }}</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-6">
+          <label for="status-note" class="form-label">Note for the customer (optional)</label>
+          <input id="status-note" name="note" class="form-control" [maxlength]="noteMax"
+            placeholder="e.g. tracking number" [(ngModel)]="note" [disabled]="busy()">
+        </div>
+        <div class="col-12 col-md-3">
+          <button type="submit" class="btn btn-primary w-100" [disabled]="busy() || !nextStatus">Update status</button>
+        </div>
+      </form>
+      <p *ngIf="nextStatuses(o).length" class="small text-muted mt-2 mb-0">
+        The status applies to the whole order, including other sellers' products.
+      </p>
+    </section>
+
+    <div class="row g-4">
+      <section class="col-12 col-lg-8" aria-labelledby="items-title">
+        <div class="buy-card p-3">
+          <h2 id="items-title" class="h5">{{ seller ? 'Your products in this order' : 'Products' }}</h2>
+          <div class="table-responsive">
+            <table class="table buy-table align-middle mb-0">
+              <thead>
+                <tr><th scope="col">Product</th><th scope="col" class="text-end">Unit price</th>
+                  <th scope="col" class="text-end">Qty</th><th scope="col" class="text-end">Total</th></tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of o.items">
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <img *ngIf="item.imageUrl" [src]="item.imageUrl" [alt]="item.productName" width="48" height="48" style="object-fit: cover">
+                      <span>
+                        {{ item.productName }}
+                        <span *ngIf="item.category" class="d-block small text-muted">{{ item.category }}</span>
+                      </span>
+                    </div>
+                  </td>
+                  <td class="text-end">{{ item.unitPrice | currency: 'USD' }}</td>
+                  <td class="text-end">{{ item.quantity }}</td>
+                  <td class="text-end">{{ item.lineTotal | currency: 'USD' }}</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th scope="row" colspan="2">Total</th>
+                  <td class="text-end">{{ o.totalItems }}</td>
+                  <td class="text-end fw-semibold">{{ o.totalAmount | currency: 'USD' }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <aside class="col-12 col-lg-4 d-flex flex-column gap-4">
+        <section class="buy-card p-3" aria-labelledby="address-title">
+          <h2 id="address-title" class="h5">Delivery address</h2>
+          <address class="mb-0">
+            {{ o.shippingAddress.fullName }}<br>
+            {{ o.shippingAddress.street }}<br>
+            {{ o.shippingAddress.postalCode }} {{ o.shippingAddress.city }}<br>
+            {{ o.shippingAddress.country }}<br>
+            {{ o.shippingAddress.phone }}
+          </address>
+        </section>
+
+        <section class="buy-card p-3" aria-labelledby="timeline-title">
+          <h2 id="timeline-title" class="h5">Status history</h2>
+          <ol class="list-unstyled mb-0">
+            <li *ngFor="let change of timeline(o); let first = first" class="border-start ps-3 pb-3"
+              [class.fw-semibold]="first">
+              <span [class]="statusBadge(change.status)">{{ statusLabel(change.status) }}</span>
+              <span class="d-block small text-muted mt-1">{{ change.changedAt | date: 'medium' }}</span>
+              <span *ngIf="change.note" class="d-block small">{{ change.note }}</span>
+            </li>
+          </ol>
+        </section>
+      </aside>
+    </div>
+  </ng-container>
+
+  <div class="buy-toast-container" *ngIf="toast()">
+    <output class="buy-toast" aria-live="polite">{{ toast() }}</output>
+  </div>
+</main>

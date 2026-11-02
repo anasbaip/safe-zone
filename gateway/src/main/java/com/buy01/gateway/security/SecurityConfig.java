@@ -33,6 +33,7 @@ public class SecurityConfig {
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
 
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/cart", "/cart/**", "/api/cart", "/api/cart/**").hasRole("CLIENT")
                         .anyRequest().permitAll()
                 )
 
@@ -55,7 +56,8 @@ public class SecurityConfig {
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         // Enforce allowed headers (subject requirement)
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-XSRF-TOKEN", "X-User-Id", "X-User-Role", "X-User-Roles"));
+        // X-User-* are not allowed: the gateway sets them itself from the JWT
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-XSRF-TOKEN", "Idempotency-Key"));
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

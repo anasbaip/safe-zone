@@ -1,0 +1,39 @@
+# Development overlay: build this checkout on the host Docker daemon, without Jenkins/DinD.
+# Run through scripts/run-local.sh, which creates .local/app.env and HTTPS certificates.
+services:
+  product-mongodb:
+    container_name: buy02-local-product-mongodb
+  media-mongodb:
+    container_name: buy02-local-media-mongodb
+  user-mongodb:
+    container_name: buy02-local-user-mongodb
+  order-mongodb:
+    container_name: buy02-local-order-mongodb
+  kafka:
+    container_name: buy02-local-kafka
+  discovery:
+    container_name: buy02-local-discovery
+    build: ./discovery
+  gateway:
+    container_name: buy02-local-gateway
+    build: ./gateway
+    volumes:
+      - ./.local/certs/gateway-keystore.p12:/run/secrets/gateway-keystore.p12:ro
+  user-service:
+    container_name: buy02-local-user-service
+    build: ./user-service
+  product-service:
+    container_name: buy02-local-product-service
+    build: ./product-service
+  media-service:
+    container_name: buy02-local-media-service
+    build: ./media-service
+  order-service:
+    container_name: buy02-local-order-service
+    build: ./order-service
+  frontend:
+    container_name: buy02-local-frontend
+    build: ./frontend
+    volumes:
+      - ./.local/certs/gateway-keystore.crt:/etc/nginx/certs/gateway-keystore.crt:ro
+      - ./.local/certs/gateway-keystore.key:/etc/nginx/certs/gateway-keystore.key:ro

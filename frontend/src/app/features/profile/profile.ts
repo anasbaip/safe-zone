@@ -4,11 +4,12 @@ import { AuthService } from '../../core/services/auth';
 import { ProfileService } from '../../core/services/profile';
 import { User } from '../../core/models/user';
 import { UpdateProfileDialog } from './update-profile-dialog/update-profile-dialog';
+import { AnalyticsDashboard } from '../../shared/analytics-dashboard/analytics-dashboard';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, UpdateProfileDialog],
+  imports: [CommonModule, UpdateProfileDialog, AnalyticsDashboard],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })

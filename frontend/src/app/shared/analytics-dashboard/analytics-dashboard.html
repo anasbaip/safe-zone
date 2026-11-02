@@ -1,0 +1,68 @@
+<section class="buy-card analytics p-4 mb-4" [attr.aria-label]="audience === 'SELLER' ? 'Sales analytics' : 'Purchasing analytics'" [attr.aria-busy]="loading()">
+  <h2 class="h4">{{ audience === 'SELLER' ? 'Sales overview' : 'Your purchases' }}</h2>
+  <p class="text-muted">Delivered orders only, grouped by the date they were placed (UTC). Cancelled and undelivered orders are excluded.</p>
+
+  <form [formGroup]="range" (ngSubmit)="load()" class="range-form">
+    <label>From <input type="date" class="form-control" formControlName="from" min="1970-01-01" max="9998-12-31"></label>
+    <label>To <input type="date" class="form-control" formControlName="to" min="1970-01-01" max="9998-12-31"></label>
+    <button class="btn btn-primary" type="submit" [disabled]="loading() || range.invalid">Apply dates</button>
+  </form>
+  <p class="text-muted small">Choose up to 366 days. The default covers the current month and the previous 11 months through today.</p>
+  @if (range.invalid) {
+    <p class="text-danger" role="alert">The end date must be on or after the start date, with at most 366 days included.</p>
+  }
+  @if (loading()) { <output class="d-block" aria-live="polite">Loading analytics…</output> }
+  @if (error()) {
+    <div role="alert" class="alert alert-danger">
+      {{ error() }} <button type="button" class="btn btn-outline-secondary" (click)="load()">Retry</button>
+    </div>
+  }
+  @if (data(); as report) {
+    <p class="small text-muted">{{ report.from }} – {{ report.to }}</p>
+    <dl class="summary-cards">
+      <div><dt>{{ audience === 'SELLER' ? 'Revenue' : 'Total spent' }}</dt><dd>{{ report.totalAmount | currency:'USD' }}</dd></div>
+      <div><dt>Delivered orders</dt><dd>{{ report.orderCount | number }}</dd></div>
+      <div><dt>{{ audience === 'SELLER' ? 'Units sold' : 'Units purchased' }}</dt><dd>{{ report.totalUnits | number }}</dd></div>
+    </dl>
+    @if (report.orderCount === 0) {
+      <output class="d-block" aria-live="polite">No delivered orders in this period. Your analytics will appear here after orders are delivered.</output>
+    } @else {
+      <h3 class="h5">{{ audience === 'SELLER' ? 'Best-selling products' : 'Most purchased products' }}</h3>
+      <section class="table-scroll" aria-label="Top products">
+        <table class="table">
+          <caption>Top five products by units, then amount</caption>
+          <thead><tr><th scope="col">Product</th><th scope="col">Units</th><th scope="col">Amount</th></tr></thead>
+          <tbody>
+            @for (product of report.products; track product.productId) {
+              <tr><th scope="row">{{ product.name }}</th><td>{{ product.units | number }}</td><td>{{ product.amount | currency:'USD' }}</td></tr>
+            }
+          </tbody>
+        </table>
+      </section>
+
+      <h3 class="h5">Top categories</h3>
+      <ul class="category-chart">
+        @for (category of report.categories; track category.category) {
+          <li>
+            <span>{{ category.category }} · {{ category.units | number }} units · {{ category.amount | currency:'USD' }}</span>
+            <div class="bar-track" aria-hidden="true"><div class="bar" [style.width.%]="width(category.units, categoryUnits)"></div></div>
+          </li>
+        }
+      </ul>
+
+      <h3 class="h5">{{ audience === 'SELLER' ? 'Sales and order trends' : 'Monthly spending' }}</h3>
+      <section class="table-scroll" aria-label="Monthly trends">
+        <table class="table">
+          <caption>Monthly totals; empty months are included</caption>
+          <thead><tr><th scope="col">Month</th><th scope="col">Orders</th><th scope="col">Units</th><th scope="col">Amount</th><th scope="col">Trend</th></tr></thead>
+          <tbody>
+            @for (month of report.months; track month.month) {
+              <tr><th scope="row">{{ month.month }}</th><td>{{ month.orderCount | number }}</td><td>{{ month.units | number }}</td><td>{{ month.amount | currency:'USD' }}</td>
+                <td><div class="bar-track trend" aria-hidden="true"><div class="bar" [style.width.%]="width(month.amount, monthlyAmounts)"></div></div></td></tr>
+            }
+          </tbody>
+        </table>
+      </section>
+    }
+  }
+</section>

@@ -2,13 +2,6 @@
   min-height: 80vh;
 }
 
-/* Maker Hero Card */
-.maker-hero-card {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--bg-surface-alt);
-  border-radius: var(--radius-md);
-}
-
 .maker-avatar-wrapper {
   width: 120px;
   height: 120px;
@@ -52,19 +45,6 @@
   line-height: 1.6;
 }
 
-/* Technical Details (Below the Fold) */
-.maker-technical-panel {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--bg-surface-alt);
-  border-radius: var(--radius-md);
-}
-
-.maker-detail-block {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
 .maker-detail-label {
   font-size: var(--type-xs);
   color: var(--text-muted);
@@ -94,4 +74,28 @@
 
 .profile-skeleton-line-short {
   width: 24%;
+}
+
+.maker-hero-card {
+  background: #e7f1eb;
+  border: 0;
+  border-radius: 22px;
+  box-shadow: var(--buy-shadow-sm);
+}
+.maker-avatar-wrapper,
+.maker-portrait-img,
+.maker-portrait-fallback {
+  border-radius: 50%;
+}
+.maker-technical-panel {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--bg-surface-alt);
+  border-radius: 20px;
+  box-shadow: var(--buy-shadow-sm);
+}
+.maker-detail-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-block: 1rem;
 }

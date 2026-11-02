@@ -17,6 +17,8 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import com.buy_01.media.exception.ForbiddenException;
 import com.buy_01.media.exception.UnauthorizedException;
+import com.buy_01.media.exception.MediaStorageException;
+import com.buy_01.media.exception.GlobalExceptionHandler;
 import com.buy_01.media.model.dto.MediaRespDto;
 import com.buy_01.media.model.entity.MediaMetaData;
 import com.buy_01.media.service.MediaService;
@@ -29,6 +31,22 @@ class MediaControllerTest {
 
     @InjectMocks
     private MediaController controller;
+
+    @Test
+    void uploadProviderFailureReturnsSafeBadGatewayThroughHttp() throws Exception {
+        when(mediaService.uploadImage(any(), any()))
+                .thenThrow(new MediaStorageException(new RuntimeException("api_secret=private")));
+        var mvc = org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup(controller)
+                .setControllerAdvice(new GlobalExceptionHandler()).build();
+        var file = new MockMultipartFile("file", "pic.png", "image/png", new byte[]{1});
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/media/images")
+                        .file(file).header("X-User-Id", "owner").header("X-User-Roles", "SELLER"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isBadGateway())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.message")
+                        .value("Image storage is unavailable. Please retry or contact support."))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
+                        .string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("api_secret"))));
+    }
 
     private final MediaMetaData metadata = MediaMetaData.builder()
             .id("m1")

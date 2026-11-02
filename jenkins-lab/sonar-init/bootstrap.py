@@ -13,7 +13,7 @@ import urllib.parse
 import urllib.request
 
 COMPONENTS = {'product': 'product-service', 'user': 'user-service',
-              'media': 'media-service', 'gateway': 'gateway',
+              'media': 'media-service', 'order': 'order-service', 'gateway': 'gateway',
               'discovery': 'discovery', 'frontend': 'frontend'}
 
 GATE_NAME = 'Buy01 Quality Gate'

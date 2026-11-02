@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.buy_01.media.exception.MediaStorageException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -16,15 +17,19 @@ import lombok.RequiredArgsConstructor;
 public class CloudinaryStorageService {
     private final Cloudinary cloudinary;
 
-    public Map<String, Object> uploadFile(MultipartFile file) throws IOException {
+    public Map<String, Object> uploadFile(MultipartFile file) {
         // Uploads the file byte array to Cloudinary under the folder 'buy01_products'
-        return cloudinary.uploader().upload(
+        try {
+            return cloudinary.uploader().upload(
                 file.getBytes(),
                 ObjectUtils.asMap(
                         "folder", "buy01_products",
                         "resource_type", "auto"
                 )
-        );
+            );
+        } catch (IOException | RuntimeException ex) {
+            throw new MediaStorageException(ex);
+        }
     }
 
 
@@ -32,8 +37,8 @@ public class CloudinaryStorageService {
         try {
             // Removes image asset from Cloudinary CDN/storage
             cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to delete image from Cloudinary: " + publicId, e);
+        } catch (IOException | RuntimeException ex) {
+            throw new MediaStorageException(ex);
         }
     }
     

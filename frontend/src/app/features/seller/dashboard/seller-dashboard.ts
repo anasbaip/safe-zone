@@ -5,11 +5,12 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } 
 import { ProductService } from '../../../core/services/product';
 import { MediaService } from '../../../core/services/media';
 import { Product } from '../../../core/models/product';
+import { AnalyticsDashboard } from '../../../shared/analytics-dashboard/analytics-dashboard';
 
 @Component({
   selector: 'app-seller-dashboard',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, AnalyticsDashboard],
   templateUrl: './seller-dashboard.html',
   styleUrl: './seller-dashboard.css'
 })
@@ -40,6 +41,7 @@ export class SellerDashboard implements OnInit, OnDestroy {
   ) {
     this.productForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
+      category: ['uncategorized', [Validators.required, Validators.maxLength(80), Validators.pattern(/\S/)]],
       price: [null, [Validators.required, Validators.min(0.01)]],
       quantity: [1, [Validators.required, Validators.min(0)]],
       description: ['', [Validators.required, Validators.minLength(5)]]
@@ -78,7 +80,7 @@ export class SellerDashboard implements OnInit, OnDestroy {
     this.discardDraft();
     this.editingId.set(null);
     this.attachedMedia.set([]);
-    this.productForm.reset({ price: null, quantity: 1, name: '', description: '' });
+    this.productForm.reset({ price: null, quantity: 1, name: '', description: '', category: 'uncategorized' });
     this.showForm.set(true);
   }
 
@@ -93,6 +95,7 @@ export class SellerDashboard implements OnInit, OnDestroy {
     this.attachedMedia.set(media);
     this.productForm.patchValue({
       name: product.name,
+      category: product.category || 'uncategorized',
       price: product.price,
       quantity: product.quantity,
       description: product.description
@@ -182,7 +185,7 @@ export class SellerDashboard implements OnInit, OnDestroy {
       if (mediaIds.length !== this.attachedMedia().length) {
         throw new Error('Each product image must have a media ID before saving.');
       }
-      const payload: Product = { ...values, mediaIds };
+      const payload: Product = { ...values, category: values.category.trim().toLowerCase(), mediaIds };
       await firstValueFrom(currentId
         ? this.productService.updateProduct(currentId, payload)
         : this.productService.createProduct(payload));

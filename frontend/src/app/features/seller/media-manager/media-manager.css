@@ -2,7 +2,6 @@
   min-height: 80vh;
 }
 
-/* Physical Space Upload Bay (Darkroom Station) */
 .atelier-darkroom-bay {
   background-color: var(--bg-surface);
   border: 1px solid var(--bg-surface-alt);
@@ -22,11 +21,6 @@
   flex-shrink: 0;
 }
 
-.darkroom-intake-well {
-  background-color: var(--bg-primary);
-  border-color: var(--bg-surface-alt) !important;
-}
-
 .darkroom-inspection-plate {
   background-color: var(--bg-primary);
   border-color: var(--bg-surface-alt) !important;
@@ -38,7 +32,6 @@
   border: 1px solid var(--bg-surface-alt);
 }
 
-/* Asymmetric Gallery-Wall Grid for Media */
 .atelier-media-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
@@ -83,14 +76,6 @@
   }
 }
 
-/* Card & Full-Bleed Image */
-.media-gallery-card {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--bg-surface-alt);
-  border-radius: var(--radius-xs);
-  transition: border-color var(--transition-fast);
-}
-
 .media-gallery-card:hover {
   border-color: var(--accent);
 }
@@ -114,19 +99,6 @@
   transform: scale(1.03);
 }
 
-.media-zoom-overlay {
-  position: absolute;
-  inset: 0;
-  background-color: rgba(18, 17, 16, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  color: var(--text-primary);
-  font-size: var(--type-xs);
-  transition: opacity var(--transition-fast);
-}
-
 .media-thumb-wrapper:hover .media-zoom-overlay,
 .media-thumb-wrapper:focus-visible .media-zoom-overlay {
   opacity: 1;
@@ -135,4 +107,36 @@
 .darkroom-modal-frame {
   background-color: var(--bg-primary);
   border-color: var(--bg-surface-alt) !important;
+}
+
+.atelier-darkroom-bay,
+.darkroom-inspection-plate {
+  background: white;
+  border-radius: 20px;
+  box-shadow: var(--buy-shadow-sm);
+}
+.darkroom-intake-well {
+  background: #f0f7f3;
+  border: 2px dashed #a8cabe;
+  border-color: var(--bg-surface-alt) !important;
+  border-radius: 16px;
+}
+.media-gallery-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--bg-surface-alt);
+  transition: border-color var(--transition-fast);
+  border-radius: 16px;
+  box-shadow: var(--buy-shadow-sm);
+}
+.media-zoom-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  font-size: var(--type-xs);
+  transition: opacity var(--transition-fast);
+  background: #16352eb3;
+  color: white;
 }

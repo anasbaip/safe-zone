@@ -81,3 +81,8 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+
+.buy-modal-content {
+  border-radius: 22px;
+  box-shadow: 0 24px 80px #16352e30;
+}

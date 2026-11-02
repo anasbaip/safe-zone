@@ -17,6 +17,8 @@ jenkins:
                   value: "${SONAR_USER_PROJECT_KEY}"
                 - key: SONAR_MEDIA_PROJECT_KEY
                   value: "${SONAR_MEDIA_PROJECT_KEY}"
+                - key: SONAR_ORDER_PROJECT_KEY
+                  value: "${SONAR_ORDER_PROJECT_KEY}"
                 - key: SONAR_GATEWAY_PROJECT_KEY
                   value: "${SONAR_GATEWAY_PROJECT_KEY}"
                 - key: SONAR_DISCOVERY_PROJECT_KEY
@@ -116,6 +118,15 @@ credentials:
                         id: "sonar-frontend-token"
                         description: "SonarQube Frontend token"
                         secret: "${SONAR_FRONTEND_TOKEN}"
+
+                  # ==================================
+                  # SonarQube - Order Service (includes Cart and Checkout)
+                  # ==================================
+                  - string:
+                        scope: GLOBAL
+                        id: "sonar-order-token"
+                        description: "SonarQube Order Service token"
+                        secret: "${SONAR_ORDER_TOKEN}"
 
                   # END SONAR CREDENTIALS
                   # ==================================
@@ -219,7 +230,7 @@ jobs:
 
                               remote {
 
-                                  url('https://github.com/anasbaip/safe-zone.git')
+                                  url('https://github.com/AyyoubMh48/buy-02')
 
                                   credentials('github-mr-jenk')
 

@@ -68,4 +68,14 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         assertThat(response.getBody().message()).contains("boom");
     }
+
+    @Test
+    void handleConflict_returnsConflict() {
+        when(request.getRequestURI()).thenReturn("/internal/stock/reserve");
+
+        var response = handler.handleConflict(new ConflictException("Not enough stock"), request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody().message()).isEqualTo("Not enough stock");
+    }
 }

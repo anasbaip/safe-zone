@@ -45,15 +45,25 @@ class JwtAuthenticationFilterTest {
                 .compact();
     }
 
+    private jakarta.servlet.http.HttpServletRequest forwardedRequest(FilterChain chain,
+            MockHttpServletResponse response) throws Exception {
+        org.mockito.ArgumentCaptor<jakarta.servlet.ServletRequest> captor =
+                org.mockito.ArgumentCaptor.forClass(jakarta.servlet.ServletRequest.class);
+        verify(chain).doFilter(captor.capture(), org.mockito.ArgumentMatchers.eq(response));
+        return (jakarta.servlet.http.HttpServletRequest) captor.getValue();
+    }
+
     @Test
     void noAuthHeader_continuesChain() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("Accept", "application/json");
         MockHttpServletResponse response = new MockHttpServletResponse();
         FilterChain chain = mock(FilterChain.class);
 
         filter.doFilter(request, response, chain);
 
-        verify(chain).doFilter(request, response);
+        assertThat(forwardedRequest(chain, response).getHeader("Accept")).isEqualTo("application/json");
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
     }
 
     @Test
@@ -65,7 +75,44 @@ class JwtAuthenticationFilterTest {
 
         filter.doFilter(request, response, chain);
 
-        verify(chain).doFilter(request, response);
+        assertThat(forwardedRequest(chain, response).getHeader("Authorization")).isEqualTo("Basic abc");
+    }
+
+    @Test
+    void noAuthHeader_dropsClientSuppliedIdentityHeaders() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("X-User-Id", "victim");
+        request.addHeader("x-user-role", "SELLER");
+        request.addHeader("X-USER-ROLES", "SELLER");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        FilterChain chain = mock(FilterChain.class);
+
+        filter.doFilter(request, response, chain);
+
+        jakarta.servlet.http.HttpServletRequest forwarded = forwardedRequest(chain, response);
+        assertThat(forwarded.getHeader("X-User-Id")).isNull();
+        assertThat(forwarded.getHeader("X-User-Role")).isNull();
+        assertThat(forwarded.getHeader("X-User-Roles")).isNull();
+        assertThat(java.util.Collections.list(forwarded.getHeaderNames()))
+                .noneMatch(name -> name.toLowerCase().startsWith("x-user-"));
+    }
+
+    @Test
+    void validToken_replacesClientSuppliedIdentityHeaders() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("Authorization", "Bearer " + tokenFor("user-9", "CLIENT"));
+        request.addHeader("x-user-id", "victim");
+        request.addHeader("X-User-Roles", "SELLER");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        FilterChain chain = mock(FilterChain.class);
+
+        filter.doFilter(request, response, chain);
+
+        jakarta.servlet.http.HttpServletRequest forwarded = forwardedRequest(chain, response);
+        assertThat(java.util.Collections.list(forwarded.getHeaders("X-User-Id"))).containsExactly("user-9");
+        assertThat(java.util.Collections.list(forwarded.getHeaders("X-User-Roles"))).containsExactly("CLIENT");
+        assertThat(java.util.Collections.list(forwarded.getHeaderNames()))
+                .filteredOn(name -> name.equalsIgnoreCase("X-User-Id")).hasSize(1);
     }
 
     @Test

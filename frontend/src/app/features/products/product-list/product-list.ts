@@ -1,26 +1,44 @@
-import { Component, OnInit, signal, computed, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { EMPTY, Subject, Subscription, catchError, switchMap, timer } from 'rxjs';
 import { ProductService } from '../../../core/services/product';
-import { Product } from '../../../core/models/product';
+import { CartService } from '../../../core/services/cart';
+import { AuthService } from '../../../core/services/auth';
+import { Router } from '@angular/router';
+import { Product, ProductSearchFilters, ProductSort } from '../../../core/models/product';
 
 @Component({
   selector: 'app-product-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './product-list.html',
   styleUrl: './product-list.css',
 })
-export class ProductList implements OnInit {
+export class ProductList implements OnInit, OnDestroy {
   readonly products = signal<Product[]>([]);
   readonly loading = signal<boolean>(true);
   readonly loadError = signal<string>('');
 
-  // Search, Filter & View Controls
-  readonly searchQuery = signal<string>('');
-  readonly sortBy = signal<string>('featured');
-  readonly filterStock = signal<string>('all');
+  readonly totalElements = signal(0);
+  readonly totalPages = signal(0);
+  readonly page = signal(0);
   readonly viewMode = signal<'grid' | 'list'>('grid');
+  readonly filters = new FormGroup({
+    q: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(200)] }),
+    category: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(80)] }),
+    minPrice: new FormControl<number | null>(null, [Validators.min(0), Validators.pattern(/^\d{1,12}(?:\.\d{1,2})?$/)]),
+    maxPrice: new FormControl<number | null>(null, [Validators.min(0), Validators.pattern(/^\d{1,12}(?:\.\d{1,2})?$/)]),
+    inStock: new FormControl(false, { nonNullable: true }),
+    sort: new FormControl<ProductSort>('newest', { nonNullable: true }),
+    size: new FormControl(12, { nonNullable: true }),
+  }, { validators: control => {
+    const { minPrice, maxPrice } = control.value;
+    return minPrice != null && maxPrice != null && minPrice > maxPrice ? { priceRange: true } : null;
+  } });
+
+  private readonly requests = new Subject<{ filters: ProductSearchFilters; delay: number } | null>();
+  private readonly subscriptions = new Subscription();
 
   // Interactive Quick View Modal (R-26, C-2)
   readonly selectedProduct = signal<Product | null>(null);
@@ -30,65 +48,88 @@ export class ProductList implements OnInit {
   readonly toastMessage = signal<string>('');
   private toastTimeout: ReturnType<typeof setTimeout> | undefined;
 
-  constructor(private readonly productService: ProductService) {}
+  readonly adding = signal(false);
+  constructor(private readonly productService: ProductService,
+              private readonly cartService: CartService,
+              public readonly auth: AuthService,
+              private readonly router: Router) {}
 
   ngOnInit(): void {
+    this.subscriptions.add(this.requests.pipe(
+      switchMap(request => request === null ? EMPTY : timer(request.delay).pipe(
+        switchMap(() => this.productService.searchProducts(request.filters)),
+        catchError(() => {
+          this.loadError.set('Unable to retrieve products. Please try again.');
+          this.loading.set(false);
+          return EMPTY;
+        })
+      ))
+    ).subscribe(result => {
+      this.products.set(result.content);
+      this.totalElements.set(result.totalElements);
+      this.totalPages.set(result.totalPages);
+      this.page.set(result.page);
+      this.loading.set(false);
+    }));
+    this.subscriptions.add(this.filters.valueChanges.subscribe(() => {
+      this.page.set(0);
+      this.queueSearch(300);
+    }));
     this.loadProducts();
   }
 
-  loadProducts(): void {
-    this.loading.set(true);
-    this.loadError.set('');
-    this.productService.getProducts().subscribe({
-      next: (data: Product[]) => {
-        this.products.set(data || []);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.loadError.set('Unable to retrieve products. Please verify your connection.');
-        this.loading.set(false);
-      }
-    });
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+    if (this.toastTimeout) clearTimeout(this.toastTimeout);
   }
 
-  // Computed filtered & sorted product list
-  readonly filteredProducts = computed(() => {
-    let list = [...this.products()];
-    const query = this.searchQuery().trim().toLowerCase();
+  loadProducts(): void {
+    this.queueSearch(0);
+  }
 
-    if (query) {
-      list = list.filter(p =>
-        p.name.toLowerCase().includes(query) ||
-        p.description?.toLowerCase().includes(query)
-      );
+  applyFilters(): void {
+    this.page.set(0);
+    this.loadProducts();
+  }
+
+  private queueSearch(delay: number): void {
+    this.products.set([]);
+    this.totalElements.set(0);
+    this.totalPages.set(0);
+    this.loadError.set('');
+    if (this.filters.invalid) {
+      this.filters.markAllAsTouched();
+      this.loading.set(false);
+      this.requests.next(null);
+      return;
     }
+    const values = this.filters.getRawValue();
+    this.loading.set(true);
+    this.requests.next({ filters: {
+      ...values,
+      q: values.q.trim(),
+      category: values.category.trim().toLowerCase(),
+      page: this.page(),
+    }, delay });
+  }
 
-    if (this.filterStock() === 'in-stock') {
-      list = list.filter(p => (p.quantity ?? 0) > 0);
-    }
+  changePage(page: number): void {
+    if (this.loading() || this.filters.invalid || page < 0 || page >= this.totalPages() || page === this.page()) return;
+    this.page.set(page);
+    this.loadProducts();
+  }
 
-    switch (this.sortBy()) {
-      case 'price-asc':
-        list.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-desc':
-        list.sort((a, b) => b.price - a.price);
-        break;
-      case 'name-asc':
-        list.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      default:
-        // 'featured' keeps server order
-        break;
-    }
-
-    return list;
-  });
+  hasFilters(): boolean {
+    const values = this.filters.getRawValue();
+    return !!(values.q || values.category || values.minPrice != null || values.maxPrice != null
+      || values.inStock || values.sort !== 'newest' || values.size !== 12);
+  }
 
   clearSearch(): void {
-    this.searchQuery.set('');
-    this.filterStock.set('all');
-    this.sortBy.set('featured');
+    this.filters.reset({ q: '', category: '', minPrice: null, maxPrice: null,
+      inStock: false, sort: 'newest', size: 12 }, { emitEvent: false });
+    this.page.set(0);
+    this.loadProducts();
   }
 
   openQuickView(product: Product): void {
@@ -107,7 +148,14 @@ export class ProductList implements OnInit {
   }
 
   addToOrder(product: Product): void {
-    this.showToast(`Item "${product.name}" added to order request.`);
+    if (!this.auth.isLoggedIn()) { this.router.navigate(['/login']); return; }
+    if (!this.auth.hasRole('CLIENT')) { this.showToast('Only clients can add items to a cart.'); return; }
+    if (!product.id || product.quantity < 1 || this.adding()) return;
+    this.adding.set(true);
+    this.cartService.add(product.id).subscribe({
+      next: () => { this.adding.set(false); this.showToast(`Item "${product.name}" added to cart.`); },
+      error: e => { this.adding.set(false); this.showToast(e.error?.message || 'Unable to add to cart. Please retry.'); }
+    });
   }
 
   showToast(msg: string): void {

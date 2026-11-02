@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scan six projects; save reviewable metrics even when a gate fails.
+"""Scan all provisioned projects; save reviewable metrics even when a gate fails.
 
 --initialize is only for a fresh, disposable CI SonarQube server. Without it,
 use SONAR_TOKEN to analyze against an existing server (local validation).
@@ -14,8 +14,10 @@ import secrets
 import subprocess
 import sys
 import tempfile
+import time
 import urllib.parse
 import urllib.request
+import urllib.error
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'jenkins-lab/sonar-init'))
@@ -43,6 +45,26 @@ class TemporaryAnalysisAPI(API):
         return False
 
 
+class InitializationError(RuntimeError):
+    """Only static endpoint names and HTTP status codes may enter CI diagnostics."""
+    def __init__(self, endpoint, status):
+        super().__init__(f'Sonar initialization {endpoint}: HTTP {status}')
+
+
+def wait_ready(host):
+    """Check the status field itself before changing a disposable server's password."""
+    for attempt in range(15):
+        try:
+            with urllib.request.urlopen(host + '/api/system/status', timeout=5) as response:
+                if json.loads(response.read()).get('status') == 'UP':
+                    return
+        except (urllib.error.URLError, TimeoutError):
+            pass
+        if attempt < 14:
+            time.sleep(2)
+    raise InitializationError('system/status', 503)
+
+
 def initialize(host):
     password = 'Aa1!' + secrets.token_hex(24)
     def basic_call(endpoint, params, current_password):
@@ -50,12 +72,40 @@ def initialize(host):
             data=urllib.parse.urlencode(params).encode(), headers={
                 'Authorization': 'Basic ' + base64.b64encode(
                     ('admin:' + current_password).encode()).decode()})
-        with urllib.request.urlopen(request, timeout=30) as response:
-            body = response.read()
-            return json.loads(body) if body else {}
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                body = response.read()
+                return json.loads(body) if body else {}
+        except urllib.error.HTTPError as error:
+            raise InitializationError(endpoint, error.code) from error
     basic_call('users/change_password', {'login': 'admin', 'previousPassword': 'admin',
                                         'password': password}, 'admin')
     return basic_call('user_tokens/generate', {'name': 'ci-bootstrap'}, password)['token']
+
+
+def failure_details(result):
+    """Render actionable gate failures without exposing API responses or tokens."""
+    gate = result.get('quality_gate', {})
+    lines = []
+    for condition in gate.get('conditions', []):
+        if condition.get('status') == 'ERROR':
+            lines.append('- `{}`: actual **{}**, fails when {} **{}**.'.format(
+                condition['metricKey'], condition.get('actualValue', 'n/a'),
+                condition.get('comparator', '?'), condition.get('errorThreshold', 'n/a')))
+    if result['scanner_exit_code']:
+        lines.append('- Scanner exit code: {}.'.format(result['scanner_exit_code']))
+    if gate.get('status') != 'OK' or result['scanner_exit_code']:
+        for issue in result.get('issues', {}).get('issues', []):
+            location = issue.get('component', 'unknown')
+            if issue.get('line') is not None:
+                location += ':' + str(issue['line'])
+            message = issue.get('message', '').replace('\n', ' ').replace('\r', ' ')
+            lines.append('- `{}` `{}`: {}'.format(location, issue.get('rule', 'unknown'), message))
+    if result.get('error'):
+        lines.append('- ' + result['error'])
+    if not lines and gate.get('status') != 'OK':
+        lines.append('- No failed conditions returned; inspect the project JSON report and scanner log.')
+    return lines
 
 
 def main():
@@ -63,6 +113,8 @@ def main():
     args.add_argument('--initialize', action='store_true')
     options = args.parse_args()
     host = os.environ.get('SONAR_HOST_URL', 'http://localhost:9000').rstrip('/')
+    if options.initialize:
+        wait_ready(host)
     token = initialize(host) if options.initialize else os.environ['SONAR_TOKEN']
     if os.environ.get('GITHUB_ACTIONS') == 'true':
         print('::add-mask::' + token)
@@ -122,6 +174,10 @@ def main():
         summary.append('| {} | {} | {}% | {}% |'.format(result['project'],
             result.get('quality_gate', {}).get('status', 'ERROR'),
             metrics.get('coverage', 'n/a'), metrics.get('duplicated_lines_density', 'n/a')))
+    for result in results:
+        details = failure_details(result)
+        if details:
+            summary.extend(['', '## ' + result['project'], '', *details])
     summary.extend(['', 'Scanner or gate failures: ' + (', '.join(failed) or 'none')])
     text = '\n'.join(summary) + '\n'
     (report / 'summary.md').write_text(text)
@@ -136,6 +192,9 @@ def main():
 if __name__ == '__main__':
     try:
         sys.exit(main())
+    except InitializationError as error:
+        print(str(error), file=sys.stderr)
+        sys.exit(1)
     except Exception as error:
         print('Quality analysis could not complete: ' + type(error).__name__, file=sys.stderr)
         sys.exit(1)

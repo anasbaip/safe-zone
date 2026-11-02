@@ -1,0 +1,18 @@
+:host { display: block; }
+.range-form { display: flex; flex-wrap: wrap; gap: 1rem; align-items: end; margin-bottom: .75rem; }
+.range-form label { display: grid; gap: .35rem; }
+.summary-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.summary-cards > div { padding: 1rem; border: 1px solid var(--bg-surface-alt); border-radius: var(--radius-md); }
+dt { font-weight: 400; color: var(--text-muted); }
+dd { margin: .5rem 0 0; font-size: 1.5rem; overflow-wrap: anywhere; }
+.table-scroll { overflow-x: auto; margin-bottom: 1.5rem; }
+table { width: 100%; }
+caption { color: var(--text-muted); }
+.category-chart { list-style: none; padding: 0; display: grid; gap: 1rem; margin-bottom: 2rem; }
+.bar-track { height: .65rem; background: var(--bg-surface-alt); border-radius: var(--radius-xs); margin-top: .4rem; }
+.bar { height: 100%; background: var(--accent); border-radius: inherit; }
+.trend { min-width: 5rem; }
+@media (max-width: 600px) {
+  .summary-cards { grid-template-columns: 1fr; }
+  .range-form label, .range-form button { width: 100%; }
+}

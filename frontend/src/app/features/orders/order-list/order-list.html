@@ -1,0 +1,74 @@
+<main class="container-xl py-4">
+  <h1>{{ seller ? 'Orders' : 'My orders' }}</h1>
+  <p *ngIf="seller" class="text-muted">
+    Orders that contain your products. Totals cover only your items.
+  </p>
+
+  <form class="buy-card p-3 mb-4" (ngSubmit)="search()" role="search" aria-label="Filter orders">
+    <div class="row g-3 align-items-end">
+      <div class="col-12 col-md-4">
+        <label for="order-q" class="form-label">Search</label>
+        <input id="order-q" name="q" type="search" class="form-control" maxlength="100"
+          placeholder="Order reference or product name" [(ngModel)]="filters.q" [disabled]="busy()">
+      </div>
+      <div class="col-6 col-md-2">
+        <label for="order-status" class="form-label">Status</label>
+        <select id="order-status" name="status" class="form-select" [(ngModel)]="filters.status" [disabled]="busy()">
+          <option value="">All</option>
+          <option *ngFor="let status of statuses" [value]="status">{{ statusLabel(status) }}</option>
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label for="order-from" class="form-label">From</label>
+        <input id="order-from" name="from" type="date" class="form-control" [(ngModel)]="filters.from" [disabled]="busy()">
+      </div>
+      <div class="col-6 col-md-2">
+        <label for="order-to" class="form-label">To</label>
+        <input id="order-to" name="to" type="date" class="form-control" [(ngModel)]="filters.to" [disabled]="busy()">
+      </div>
+      <div class="col-6 col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-primary flex-fill" [disabled]="busy()">Apply</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="reset()" [disabled]="busy()">Reset</button>
+      </div>
+    </div>
+  </form>
+
+  <output *ngIf="busy()" class="d-block mb-3">Loading orders…</output>
+  <div *ngIf="error()" class="alert alert-danger" role="alert">{{ error() }}</div>
+
+  <ng-container *ngIf="result() as page">
+    <p *ngIf="!page.content.length && !busy()">
+      {{ filtered ? 'No orders match these filters.' : seller ? 'No orders contain your products yet.' : 'You have not placed any orders yet.' }}
+    </p>
+
+    <article *ngFor="let order of page.content" class="buy-card p-3 mb-3">
+      <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+        <div>
+          <h2 class="h5 mb-1">Order #{{ shortId(order.id) }}</h2>
+          <p class="text-muted small mb-0">Placed {{ order.createdAt | date: 'medium' }}</p>
+        </div>
+        <span [class]="statusBadge(order.status)">{{ statusLabel(order.status) }}</span>
+      </div>
+      <p class="mb-1 mt-2">{{ productNames(order.items) }}</p>
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <p class="mb-0 fw-semibold">
+          {{ order.totalItems }} {{ order.totalItems === 1 ? 'item' : 'items' }} ·
+          {{ order.totalAmount | currency: 'USD' }}
+        </p>
+        <a class="btn btn-outline-primary btn-sm" [routerLink]="['/orders', order.id]"
+          [attr.aria-label]="'View order ' + shortId(order.id)">View details</a>
+      </div>
+    </article>
+
+    <nav *ngIf="page.totalPages > 1" class="d-flex justify-content-between align-items-center mt-3" aria-label="Order pages">
+      <button class="btn btn-outline-secondary" (click)="load(page.page - 1)" [disabled]="busy() || page.page === 0">
+        Previous
+      </button>
+      <span>Page {{ page.page + 1 }} of {{ page.totalPages }}</span>
+      <button class="btn btn-outline-secondary" (click)="load(page.page + 1)"
+        [disabled]="busy() || page.page + 1 >= page.totalPages">
+        Next
+      </button>
+    </nav>
+  </ng-container>
+</main>

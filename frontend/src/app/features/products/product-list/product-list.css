@@ -1,157 +1,3 @@
-/* Catalog Exhibition Header */
-.atelier-catalog-hero {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--bg-surface-alt);
-  border-radius: var(--radius-md);
-}
-
-.atelier-hero-kicker {
-  font-family: var(--font-body);
-  font-size: var(--type-xs);
-  font-weight: 500;
-  color: var(--text-muted);
-}
-
-.atelier-hero-title {
-  font-family: var(--font-display);
-  font-size: var(--type-2xl);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--text-primary);
-}
-
-.atelier-hero-copy {
-  font-size: var(--type-sm);
-  color: var(--text-muted);
-  max-width: 640px;
-}
-
-.atelier-count-block {
-  display: inline-flex;
-  flex-direction: column;
-  background-color: var(--bg-primary);
-  border: 1px solid var(--bg-surface-alt);
-  padding: 0.75rem 1.25rem;
-  border-radius: var(--radius-sm);
-  text-align: right;
-}
-
-.atelier-count-number {
-  font-family: var(--font-display);
-  font-size: var(--type-xl);
-  font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1;
-}
-
-.atelier-count-label {
-  font-size: var(--type-xs);
-  color: var(--text-muted);
-  margin-top: 0.25rem;
-}
-
-/* Toolbar Controls */
-.atelier-toolbar {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--bg-surface-alt);
-  border-radius: var(--radius-sm);
-}
-
-/* Asymmetric Gallery-Wall Grid */
-.atelier-gallery-grid {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 1.5rem;
-  animation: atelierGalleryLoadIn 0.35s ease-out;
-}
-
-@keyframes atelierGalleryLoadIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Asymmetric Tile Spans */
-.atelier-grid-tile {
-  grid-column: span 4;
-}
-
-.atelier-grid-tile.tile-feature {
-  grid-column: span 7;
-}
-
-.atelier-grid-tile.tile-medium {
-  grid-column: span 5;
-}
-
-.atelier-grid-tile.tile-compact {
-  grid-column: span 4;
-}
-
-/* Responsive Degradation */
-@media (max-width: 991.98px) {
-  .atelier-grid-tile,
-  .atelier-grid-tile.tile-feature,
-  .atelier-grid-tile.tile-medium,
-  .atelier-grid-tile.tile-compact {
-    grid-column: span 6;
-  }
-}
-
-@media (max-width: 575.98px) {
-  .atelier-gallery-grid {
-    gap: 1rem;
-  }
-
-  .atelier-grid-tile,
-  .atelier-grid-tile.tile-feature,
-  .atelier-grid-tile.tile-medium,
-  .atelier-grid-tile.tile-compact {
-    grid-column: span 12;
-  }
-}
-
-/* Product Card & Full-Bleed Imagery */
-.atelier-piece-card {
-  overflow: hidden;
-  background-color: var(--bg-surface);
-  border: 1px solid var(--bg-surface-alt);
-  border-radius: var(--radius-sm);
-  transition: border-color var(--transition-fast);
-}
-
-.atelier-piece-card:hover {
-  border-color: var(--accent);
-}
-
-.product-image-container {
-  width: 100%;
-  height: 230px;
-  background-color: var(--bg-primary);
-  overflow: hidden;
-  position: relative;
-}
-
-.tile-feature .product-image-container {
-  height: 340px;
-}
-
-.tile-medium .product-image-container {
-  height: 280px;
-}
-
-.product-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform var(--transition-base);
-}
-
 .atelier-piece-card:hover .product-image {
   transform: scale(1.02);
 }
@@ -167,21 +13,6 @@
   color: var(--text-muted);
 }
 
-.product-title {
-  font-family: var(--font-display);
-  font-size: var(--type-md);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--text-primary);
-}
-
-.atelier-price {
-  font-family: var(--font-display);
-  font-size: var(--type-md);
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
 .product-desc {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -192,7 +23,6 @@
   color: var(--text-muted);
 }
 
-/* List Mode Styles */
 .product-list-thumb {
   width: 80px;
   height: 80px;
@@ -202,7 +32,6 @@
   border: 1px solid var(--bg-surface-alt);
 }
 
-/* Modal Gallery */
 .modal-main-img-box {
   height: 300px;
   border-radius: var(--radius-sm);
@@ -228,4 +57,110 @@
 
 .modal-thumb-btn.active-thumb {
   border-color: var(--accent);
+}
+
+.atelier-catalog-hero {
+  background: #e7f1eb;
+  border: 0;
+  border-radius: 24px;
+  padding: clamp(1.5rem, 4vw, 3rem) !important;
+}
+.atelier-hero-kicker {
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.atelier-hero-title {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  max-width: 720px;
+  line-height: 1.08;
+  letter-spacing: -0.05em;
+}
+.atelier-hero-copy {
+  font-size: 1rem;
+  line-height: 1.7;
+}
+.atelier-count-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: #ffffffb3;
+  border-color: #ffffff;
+  border-radius: 16px;
+  text-align: center;
+}
+.atelier-count-number,
+.atelier-price {
+  color: var(--accent);
+}
+.atelier-toolbar {
+  border-radius: 16px;
+  box-shadow: var(--buy-shadow-sm);
+}
+.atelier-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+.atelier-grid-tile,
+.atelier-grid-tile.tile-feature,
+.atelier-grid-tile.tile-medium,
+.atelier-grid-tile.tile-compact {
+  grid-column: auto;
+  min-width: 0;
+}
+.atelier-piece-card {
+  overflow: hidden;
+  background: white;
+  border: 1px solid var(--bg-surface-alt);
+  border-radius: 18px;
+  box-shadow: var(--buy-shadow-sm);
+  height: 100%;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.atelier-piece-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--buy-shadow-card-hover);
+  border-color: #a8cabe;
+}
+.product-image-container,
+.tile-feature .product-image-container,
+.tile-medium .product-image-container {
+  height: 260px;
+  background: #edf2ef;
+}
+.product-image {
+  width: 100%;
+  height: 100%;
+  transition: transform var(--transition-base);
+  object-fit: contain;
+  padding: 1rem;
+}
+.product-title {
+  font-size: 1.05rem;
+  line-height: 1.4;
+}
+@media (max-width: 991.98px) {
+  .atelier-gallery-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 575.98px) {
+  .atelier-gallery-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.atelier-count-number {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.atelier-count-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }

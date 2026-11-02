@@ -79,13 +79,29 @@ ng test
 
 ## Running end-to-end tests
 
-For end-to-end (e2e) testing, run:
+Start the full local stack from the repository root with `bash scripts/run-local.sh`.
+Then, from `frontend/`:
 
 ```bash
-ng e2e
+npm run test:e2e
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+The suite uses Puppeteer, a real Chrome browser, and the running HTTPS application.
+No API responses are mocked. It creates unique accounts/product fixtures and cleans
+up its own records, including orders, carts and checkout receipts. Fixture access is
+restricted to the `buy02-local` Compose project. Product images are not uploaded to
+Cloudinary during these tests.
+
+Set `PUPPETEER_EXECUTABLE_PATH` to select Chrome, or install the bundled browser with
+`npx puppeteer browsers install chrome`. An installed `/usr/bin/google-chrome` is
+detected automatically. CI installs Puppeteer's matching Chrome build rather than
+using the runner's independently updated browser. Use `E2E_NO_SANDBOX=1 npm run test:e2e` only where the browser
+sandbox is unavailable; CI uses this on its disposable runner.
+
+Coverage includes search/filtering, pagination, checkout, seller delivery, cancelled
+order exclusion, mixed-seller and customer isolation, analytics and date filters
+at mobile width. Failed scenarios save screenshots in `e2e/artifacts/`.
+See the [root README](../README.md#browser-end-to-end-tests) for details.
 
 ## Additional Resources
 

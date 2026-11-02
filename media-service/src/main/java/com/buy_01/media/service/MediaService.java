@@ -1,6 +1,5 @@
 package com.buy_01.media.service;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Map;
 
@@ -34,53 +33,49 @@ public class MediaService {
         //  Run Tika MIME type and file size checks
         filieValidationService.validate(file);
 
-        try {
-            //  Upload to Cloudinary
-            Map<String, Object> uploadResult = cloudinaryStorageService.uploadFile(file);
+        //  Upload to Cloudinary
+        Map<String, Object> uploadResult = cloudinaryStorageService.uploadFile(file);
 
-            String secureUrl = uploadResult.get("secure_url").toString();
-            String publicId = uploadResult.get("public_id").toString();
+        String secureUrl = uploadResult.get("secure_url").toString();
+        String publicId = uploadResult.get("public_id").toString();
 
-            //  Save metadata to MongoDB
-            MediaMetaData metadata = MediaMetaData.builder()
-                    .filename(publicId) // Stores Cloudinary public_id
-                    .originalFilename(file.getOriginalFilename())
-                    .contentType(file.getContentType())
-                    .size(file.getSize())
-                    .storagePath(secureUrl) // Stores Cloudinary HTTPS CDN URL
-                    .uploaderId(uploaderId)
-                    .uploadedAt(LocalDateTime.now(java.time.ZoneOffset.UTC))
-                    .build();
+        //  Save metadata to MongoDB
+        MediaMetaData metadata = MediaMetaData.builder()
+                .filename(publicId) // Stores Cloudinary public_id
+                .originalFilename(file.getOriginalFilename())
+                .contentType(file.getContentType())
+                .size(file.getSize())
+                .storagePath(secureUrl) // Stores Cloudinary HTTPS CDN URL
+                .uploaderId(uploaderId)
+                .uploadedAt(LocalDateTime.now(java.time.ZoneOffset.UTC))
+                .build();
 
-            MediaMetaData saved = repository.save(metadata);
+        MediaMetaData saved = repository.save(metadata);
 
-            //  Publish Kafka Event
-                kafkaTemplate.send(
-                    "IMAGE_UPLOADED",
+        //  Publish Kafka Event
+            kafkaTemplate.send(
+                "IMAGE_UPLOADED",
+                saved.getId(),
+                new ImageUploadedEvent(
                     saved.getId(),
-                    new ImageUploadedEvent(
-                        saved.getId(),
-                        saved.getUploaderId(),
-                        saved.getStoragePath(),
-                        saved.getOriginalFilename(),
-                        saved.getContentType(),
-                        saved.getSize(),
-                        saved.getUploadedAt()
-                    )
-                );
+                    saved.getUploaderId(),
+                    saved.getStoragePath(),
+                    saved.getOriginalFilename(),
+                    saved.getContentType(),
+                    saved.getSize(),
+                    saved.getUploadedAt()
+                )
+            );
 
-            return MediaRespDto.builder()
-                    .id(saved.getId())
-                    .url(saved.getStoragePath())
-                    .filename(saved.getOriginalFilename())
-                    .contentType(saved.getContentType())
-                    .size(saved.getSize())
-                    .uploaderId(saved.getUploaderId())
-                    .build();
+        return MediaRespDto.builder()
+                .id(saved.getId())
+                .url(saved.getStoragePath())
+                .filename(saved.getOriginalFilename())
+                .contentType(saved.getContentType())
+                .size(saved.getSize())
+                .uploaderId(saved.getUploaderId())
+                .build();
 
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to upload image to Cloudinary", e);
-        }
     }
 
     public MediaMetaData getMetadata(String id) {

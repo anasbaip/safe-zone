@@ -53,4 +53,33 @@ class CustomHttpServletRequestWrapperTest {
         assertThat(Collections.list(wrapper.getHeaderNames()))
                 .contains("Original", "X-User-Id");
     }
+
+    @Test
+    void removeHeader_hidesOriginalInEveryAccessor() {
+        MockHttpServletRequest original = new MockHttpServletRequest();
+        original.addHeader("x-user-id", "spoofed");
+        original.addHeader("Original", "value");
+        CustomHttpServletRequestWrapper wrapper = new CustomHttpServletRequestWrapper(original);
+
+        wrapper.removeHeader("X-User-Id");
+
+        assertThat(wrapper.getHeader("X-User-Id")).isNull();
+        assertThat(wrapper.getHeader("x-user-id")).isNull();
+        assertThat(Collections.list(wrapper.getHeaders("X-USER-ID"))).isEmpty();
+        assertThat(Collections.list(wrapper.getHeaderNames())).containsExactly("Original");
+    }
+
+    @Test
+    void putHeader_afterRemove_isCaseInsensitiveAndUnique() {
+        MockHttpServletRequest original = new MockHttpServletRequest();
+        original.addHeader("x-user-id", "spoofed");
+        CustomHttpServletRequestWrapper wrapper = new CustomHttpServletRequestWrapper(original);
+
+        wrapper.removeHeader("X-User-Id");
+        wrapper.putHeader("X-User-Id", "u1");
+
+        assertThat(wrapper.getHeader("x-user-id")).isEqualTo("u1");
+        assertThat(Collections.list(wrapper.getHeaders("x-user-id"))).containsExactly("u1");
+        assertThat(Collections.list(wrapper.getHeaderNames())).containsExactly("X-User-Id");
+    }
 }

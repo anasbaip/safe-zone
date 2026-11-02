@@ -13,6 +13,11 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(MediaStorageException.class)
+    public ResponseEntity<Map<String, Object>> handleStorage(MediaStorageException ex) {
+        return buildErrorResponse(HttpStatus.BAD_GATEWAY, ex.getMessage());
+    }
+
     @ExceptionHandler(InvalidFileException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidFile(InvalidFileException ex) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());

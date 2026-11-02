@@ -1,4 +1,5 @@
 /.env
+/.local/
 certs/gateway-keystore.p12
 certs/gateway-keystore.crt
 certs/gateway-keystore.key
@@ -17,6 +18,7 @@ jenkins-secrets/
 
 # Generated quality reports
 /reports/quality/
+/frontend/e2e/artifacts/
 
 # SonarScanner working files
 **/.scannerwork/

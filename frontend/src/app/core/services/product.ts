@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Product } from '../models/product';
+import { Product, ProductSearchFilters, ProductSearchResponse } from '../models/product';
 import { API_BASE_URL } from '../api-config';
 
 @Injectable({ providedIn: 'root' })
@@ -12,6 +12,16 @@ export class ProductService {
 
   getProducts(): Observable<Product[]> {
     return this.http.get<Product[]>(this.API_URL);
+  }
+
+  searchProducts(filters: ProductSearchFilters = {}): Observable<ProductSearchResponse> {
+    let params = new HttpParams();
+    for (const [key, value] of Object.entries(filters)) {
+      if (value !== undefined && value !== null && value !== '') {
+        params = params.set(key, String(value));
+      }
+    }
+    return this.http.get<ProductSearchResponse>(`${this.API_URL}/search`, { params });
   }
 
   getMyProducts(): Observable<Product[]> {

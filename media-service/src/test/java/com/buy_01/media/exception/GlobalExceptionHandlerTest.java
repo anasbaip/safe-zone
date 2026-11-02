@@ -12,6 +12,14 @@ class GlobalExceptionHandlerTest {
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
     @Test
+    void storageFailureReturnsBadGatewayWithoutProviderDetails() {
+        var response = handler.handleStorage(new MediaStorageException(new RuntimeException("api_secret=private")));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
+        assertThat(response.getBody()).containsEntry("message", "Image storage is unavailable. Please retry or contact support.");
+        assertThat(response.getBody().toString()).doesNotContain("api_secret");
+    }
+
+    @Test
     void handleInvalidFile_returnsBadRequest() {
         var response = handler.handleInvalidFile(new InvalidFileException("bad"));
 

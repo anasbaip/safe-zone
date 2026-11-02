@@ -66,4 +66,15 @@ describe('Product draft photos', () => {
     expect(media.uploadImage).not.toHaveBeenCalled();
     expect(products.updateProduct).toHaveBeenCalledWith('p', expect.objectContaining({ mediaIds: ['old'] }));
   });
+  it('shows a safe storage failure and keeps the draft without saving a product', async () => {
+    media.uploadImage.mockReturnValue(throwError(() => ({ status: 502,
+      error: { message: 'Image storage is unavailable. Please retry or contact support.' } })));
+    selectPhoto();
+    await component.saveProduct();
+    expect(component.statusMessage()).toBe('Image storage is unavailable. Please retry or contact support.');
+    expect(component.showForm()).toBe(true);
+    expect(component.saving()).toBe(false);
+    expect(products.updateProduct).not.toHaveBeenCalled();
+    expect(media.deleteImage).not.toHaveBeenCalled();
+  });
 });

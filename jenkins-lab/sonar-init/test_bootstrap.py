@@ -38,6 +38,37 @@ class FakeAPI:
         raise AssertionError(endpoint)
 
 class BootstrapTests(unittest.TestCase):
+    def test_seven_components_include_order_without_losing_existing_services(self):
+        self.assertEqual(bootstrap.COMPONENTS, {
+            'product': 'product-service', 'user': 'user-service', 'media': 'media-service',
+            'order': 'order-service', 'gateway': 'gateway', 'discovery': 'discovery', 'frontend': 'frontend'})
+
+    def test_order_is_project_scoped_and_existing_six_credentials_are_preserved(self):
+        api = FakeAPI()
+        original = api.call
+        def generate_only_order(endpoint, params=None, post=False, raw=False):
+            if endpoint == 'user_tokens/generate':
+                self.assertEqual(params['projectKey'], 'buy01-order-service')
+                self.assertEqual(params['type'], 'PROJECT_ANALYSIS_TOKEN')
+            return original(endpoint, params, post, raw)
+        with tempfile.TemporaryDirectory() as folder, patch.object(bootstrap, 'API', return_value=api), patch.object(api, 'call', side_effect=generate_only_order):
+            root = Path(folder)
+            existing = {}
+            for component, suffix in bootstrap.COMPONENTS.items():
+                if component != 'order':
+                    api.projects.append('buy01-' + suffix)
+                    path = root / ('sonar-' + component + '-token')
+                    path.write_text('existing-' + component)
+                    existing[path.name] = path.read_bytes()
+            bootstrap.provision(api, root)
+            self.assertEqual(api.generated, 1)
+            self.assertEqual((root / 'sonar-order-project-key').read_text().strip(), 'buy01-order-service')
+            self.assertEqual((root / 'sonar-order-token').stat().st_mode & 0o777, 0o600)
+            for name, value in existing.items():
+                self.assertEqual((root / name).read_bytes(), value)
+            bootstrap.provision(api, root)
+            self.assertEqual(api.generated, 1)
+
     def test_quality_gate_preserves_existing_gate_and_updates_thresholds(self):
         from unittest.mock import Mock
         api = Mock()
@@ -77,8 +108,8 @@ class BootstrapTests(unittest.TestCase):
             return original(endpoint, params, post, raw)
         with tempfile.TemporaryDirectory() as folder, patch.object(api, 'call', side_effect=checked_call), patch.object(bootstrap, 'API', return_value=api):
             bootstrap.provision(api, Path(folder))
-        self.assertEqual(len(api.projects), 6)
-        self.assertEqual(api.generated, 6)
+        self.assertEqual(len(api.projects), len(bootstrap.COMPONENTS))
+        self.assertEqual(api.generated, len(bootstrap.COMPONENTS))
 
     def test_create_uses_form_parameters(self):
         with patch.object(bootstrap.urllib.request, 'urlopen') as opened:
@@ -98,8 +129,8 @@ class BootstrapTests(unittest.TestCase):
             bootstrap.provision(api, root)
             before = {p.name: p.read_bytes() for p in root.iterdir()}
             bootstrap.provision(api, root)
-            self.assertEqual(len(api.projects), 6)
-            self.assertEqual(api.generated, 6)
+            self.assertEqual(len(api.projects), len(bootstrap.COMPONENTS))
+            self.assertEqual(api.generated, len(bootstrap.COMPONENTS))
             self.assertEqual(len(api.hooks), 1)
             self.assertEqual(before, {p.name: p.read_bytes() for p in root.iterdir()})
             for p in root.iterdir():
@@ -115,7 +146,7 @@ class BootstrapTests(unittest.TestCase):
             p.write_text('old-token')
             bootstrap.provision(api, Path(folder))
             self.assertEqual(p.read_text(), 'fixture-only\n')
-            self.assertEqual(api.generated, 6)
+            self.assertEqual(api.generated, len(bootstrap.COMPONENTS))
 
     def test_empty_existing_token_is_repaired(self):
         api = FakeAPI()
@@ -185,8 +216,8 @@ class BootstrapTests(unittest.TestCase):
                     bootstrap.provision(api, root)
             before = {p.name: p.read_bytes() for p in root.iterdir()}
             bootstrap.provision(api, root)
-            self.assertEqual(api.generated, 6)
-            self.assertEqual(len(list(root.iterdir())), 12)
+            self.assertEqual(api.generated, len(bootstrap.COMPONENTS))
+            self.assertEqual(len(list(root.iterdir())), 2 * len(bootstrap.COMPONENTS))
             for name, value in before.items():
                 self.assertEqual((root / name).read_bytes(), value)
 
